@@ -57,6 +57,30 @@ bool isValidGmail(const string& email) {
     size_t pos = email.find(domain);
     return (pos != string::npos && pos == email.length() - domain.length());
 }
+bool isValidExpiryDate(const string& expiryDate) {
+    regex expiryRegex("^(0[1-9]|1[0-2])/(\\d{2})$");  // MM/YY format validation
+
+    if (!regex_match(expiryDate, expiryRegex)) {
+        return false;  // Invalid format
+    }
+
+    // Extract MM and YY
+    int month = stoi(expiryDate.substr(0, 2));
+    int year = stoi(expiryDate.substr(3, 2));
+
+    // Get current month and year
+    time_t t = time(0);
+    tm* now = localtime(&t);
+    int currentYear = now->tm_year % 100;  // Get last two digits of the year
+    int currentMonth = now->tm_mon + 1;    // tm_mon is 0-based (Jan = 0)
+
+    // Check if expiry date is in the future
+    if (year < currentYear || (year == currentYear && month < currentMonth)) {
+        return false;
+    }
+
+    return true;
+}
 
 
 
@@ -72,7 +96,7 @@ void showCondoPage(Service services[], Rental rentals[], Booking bookings[], int
 void showBungalowPage(Service services[], Rental rentals[], Booking bookings[], int& bookingCount);
 void showHousePage(Service services[], Rental rentals[], Booking bookings[], int& bookingCount);
 void askForHouse(const string& service, const string& rental, const string& experience, const string& achievements, Service services[], Rental rentals[], Booking bookings[], int& bookingCount);
-void displayCalendar(Rental rentals[], Service services[], int rentalsIndex, int bookingCount);
+void displayCalendar(Rental rentals[], Service services[], int rentalsIndex);
 void initializeData(Service services[]);
 void staffLogin(Service services[], Rental rentals[], Booking bookings[], int bookingCount);
 void staffAccountSelection(Service services[], Rental rentals[], Booking bookings[], int bookingCount);
@@ -86,6 +110,8 @@ void displayData(Booking bookings[], int bookingCount, const string& search);
 void sortBookingsByDate(Booking bookings[], int bookingCount);
 void bookingSummaryPage(const Booking& booking);
 void deleteAppointment(Booking bookings[], int& bookingCount, Rental rentals[], Service services[]);
+void getValidName(string& customerName);
+void getValidExpiryDate(string& expiryDate);
 void exitApplication();
 
 void initializeData(Service services[]) {
@@ -556,7 +582,8 @@ string generateBookingID() {
 }
 
 
-void displayCalendar(Rental rentals[], Service service[], int rentalsIndex,int bookingcounts) {
+void displayCalendar(Rental rentals[], Service service[], int rentalsIndex) {
+
     cout << "\n\033[1;36mAvailability Calendar for " << rentals[rentalsIndex].Rentalname << " - May 2024:\033[0m\n";
     cout << "-----------------------------------------------------------\n";
     cout << "\033[1;33m Sun   Mon   Tue   Wed   Thu   Fri   Sat \033[0m\n"; // Headers in Yellow
@@ -584,16 +611,6 @@ void displayCalendar(Rental rentals[], Service service[], int rentalsIndex,int b
             cout << endl;
         }
     }
-    if (bookingcounts == 0) {
-        for (int i = 0; i < 3; i++) { // Loop through all rentals
-            for (int j = 0; j < 31; j++) { // Loop through all days of the month
-                rentals[i].bookedDates[j] = false; // Mark all dates as available
-            }
-        }
-    }
-    cout << "" << endl;
-    cout << "-----------------------------------------------------------\n";
-    cout << "\033[1;32mO = Available  \033[1;31mX = Booked\033[0m\n"; // Legend
 }
 void staffAccountSelection(Service services[], Rental rentals[], Booking bookings[], int bookingCount) {
     int staffStartChoice = 0;
@@ -819,7 +836,8 @@ void bookAppointment(Service services[], Rental rentals[], Booking bookings[], i
     newBooking.bookingID = generateBookingID();
     cin.get();
     cout << GREEN << "Please Enter Your Name: " << RESET;
-    getline(cin, newBooking.customerName);
+    cin.ignore();  
+    getValidName(newBooking.customerName);
 
     system("cls");
     cout << CYAN << "*******************************************************************************" << RESET << endl;
@@ -856,16 +874,8 @@ void bookAppointment(Service services[], Rental rentals[], Booking bookings[], i
     cout << CYAN << "*******************************************************************************\n" << RESET;
 
     // Show Calendar for the selected property
-    displayCalendar(rentals, services,  bookingCount,serviceChoice - 1);
+    displayCalendar(rentals, services, serviceChoice - 1);
 
-    bookingCount = 0; // Clear all bookings
-    if (bookingCount == 0) {
-        for (int i = 0; i < 3; i++) {
-            for (int j = 0; j < 31; j++) {
-                rentals[i].bookedDates[j] = false;
-            }
-        }
-    }
 
     // Select Check-In Date
     int checkInDay, checkoutDate, nights;
@@ -882,6 +892,7 @@ void bookAppointment(Service services[], Rental rentals[], Booking bookings[], i
         cout << RED << "Invalid booking , exceeds calendar days.\n" << RESET;
         return;
     }
+
     nights = checkoutDate - checkInDay;
     if (nights > 30) {
         cout << "Invalid booking, exceeds calendar days.\n";
@@ -903,10 +914,17 @@ void bookAppointment(Service services[], Rental rentals[], Booking bookings[], i
         return;
     }
     // Confirm Check-In and Book Dates
-    for (int i = checkInDay - 1; i < checkoutDate; i++) {
+    for (int i = checkInDay; i < checkoutDate; i++) {  // Ensure correct range
         rentals[serviceChoice - 1].bookedDates[i] = true;  // Book the selected dates
     }
-    rentals[serviceChoice - 1].bookedDates[checkoutDate] = true;  // Maintenance Day
+
+
+    // Save booking
+    newBooking.checkInDate = 20250500 + checkInDay;
+    newBooking.checkoutDate = 2020500 + checkoutDate;
+    newBooking.nights = checkoutDate - checkInDay;
+    newBooking.price = services[serviceChoice - 1].price * nights;
+    bookings[bookingCount++] = newBooking;
 
     // Save booking
     newBooking.checkInDate = 20250500 + checkInDay;
@@ -963,8 +981,8 @@ void paymentPage(Service services[], Rental rentals[], Booking& booking, Booking
     } while (!isValidCardNumber(cardNumber));
 
     // Get Expiry Date
-    cout << GREEN << "Enter Expiry Date (MM/YY): " << RESET;
-    cin >> expiryDate;
+    string expiryDate;
+    getValidExpiryDate(expiryDate);
 
     // Get CVV
     do {
@@ -1042,7 +1060,6 @@ void displayData(Booking bookings[], int bookingCount, const string& search) {
         cout << RED "No booking found for the given search term.\n" RESET;
     }
 }
-
 void deleteAppointment(Booking bookings[], int& bookingCount, Rental rentals[], Service services[]) {
     system("cls");
     cout << CYAN << "*******************************************************************************" << RESET << endl;
@@ -1051,6 +1068,9 @@ void deleteAppointment(Booking bookings[], int& bookingCount, Rental rentals[], 
 
     if (bookingCount == 0) {
         cout << RED << "No bookings to delete.\n" << RESET;
+        cin.ignore();
+        cin.get();
+        custMenu(services, rentals, bookings, bookingCount);
         return;
     }
 
@@ -1058,10 +1078,10 @@ void deleteAppointment(Booking bookings[], int& bookingCount, Rental rentals[], 
     cout << GREEN << "Enter Booking ID to delete: " << RESET;
     cin >> bookingID;
 
-    // Find the booking to delete
+    // Find the booking by its ID
     int bookingIndex = -1;
     for (int i = 0; i < bookingCount; i++) {
-        if (bookingID == bookings[i].bookingID) {  // Compare strings
+        if (bookings[i].bookingID == bookingID) {
             bookingIndex = i;
             break;
         }
@@ -1069,31 +1089,73 @@ void deleteAppointment(Booking bookings[], int& bookingCount, Rental rentals[], 
 
     if (bookingIndex == -1) {
         cout << RED << "Booking ID not found.\n" << RESET;
+        cout << RED << "Press Enter to go back.\n" << RESET;
+        cin.ignore();
+        cin.get();
+        custMenu(services, rentals, bookings, bookingCount);
         return;
     }
 
-    // Release the booked dates for the corresponding property
-    int serviceIndex = -1;
-    for (int i = 0; i < 3; i++) {
+    // Find which rental property was booked
+    int rentalIndex = -1;
+    for (int i = 0; i < 3; i++) {  // Assuming 3 properties
         if (services[i].propertyName == bookings[bookingIndex].propertyName) {
-            serviceIndex = i;
+            rentalIndex = i;
             break;
         }
     }
 
-    if (serviceIndex != -1) {
-        for (int i = bookings[bookingIndex].checkInDate % 100 - 1; i < (bookings[bookingIndex].checkInDate % 100 - 1) + bookings[bookingIndex].nights; i++) {
-            rentals[serviceIndex].bookedDates[i] = false;  // Mark dates as available
+    if (rentalIndex == -1) {
+        cout << RED << "Error: Rental property not found.\n" << RESET;
+        return;
+    }
+
+
+    int checkInDay = bookings[bookingIndex].checkInDate % 100;
+    int checkoutDay = bookings[bookingIndex].checkoutDate % 100;
+
+    for (int i = checkInDay - 1; i < checkoutDay; i++) {
+        rentals[rentalIndex].bookedDates[i] = false;
+    }
+
+    // Shift bookings to remove the deleted booking
+    for (int i = bookingIndex; i < bookingCount - 1; i++) {
+        bookings[i] = bookings[i + 1];
+    }
+
+    bookingCount--;
+
+    cout << GREEN << "Booking successfully deleted.\n" << RESET;
+}
+
+void getValidName(string& customerName) {
+    regex alphaRegex("^[A-Za-z ]+$");  // Allows only letters and spaces
+
+    while (true) {
+        cout << GREEN << "Please Enter Your Name: " << RESET;
+        getline(cin, customerName);
+
+        if (regex_match(customerName, alphaRegex)) {
+            break;  // Valid input, exit loop
+        }
+        else {
+            cout << RED << "Invalid name! Please enter only alphabetic characters.\n" << RESET;
         }
     }
+}
 
-    // Remove the booking from the array
-    for (int i = bookingIndex; i < bookingCount - 1; i++) {
-        bookings[i] = bookings[i + 1];  // Shift subsequent bookings
+void getValidExpiryDate(string& expiryDate) {
+    while (true) {
+        cout << GREEN << "Enter Expiry Date (MM/YY): " << RESET;
+        cin >> expiryDate;
+
+        if (isValidExpiryDate(expiryDate)) {
+            break;  // Valid expiry date
+        }
+        else {
+            cout << RED << "Invalid expiry date! Please enter a valid MM/YY format (not expired).\n" << RESET;
+        }
     }
-
-    bookingCount--;  // Decrease booking count
-    cout << GREEN << "Booking successfully deleted.\n" << RESET;
 }
 
 void exitApplication() {
