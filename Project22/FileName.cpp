@@ -39,7 +39,7 @@ struct Booking {
     int checkInDate;
     int nights;
     string date;  // Store date in format "YYYY-MM-DD"
-    string checkoutDate;
+    int checkoutDate;
     double price;
 };
 
@@ -72,7 +72,7 @@ void showCondoPage(Service services[], Rental rentals[], Booking bookings[], int
 void showBungalowPage(Service services[], Rental rentals[], Booking bookings[], int& bookingCount);
 void showHousePage(Service services[], Rental rentals[], Booking bookings[], int& bookingCount);
 void askForHouse(const string& service, const string& rental, const string& experience, const string& achievements, Service services[], Rental rentals[], Booking bookings[], int& bookingCount);
-void displayCalendar(Rental rentals[], Service services[], int rentalsIndex);
+void displayCalendar(Rental rentals[], Service services[], int rentalsIndex, int bookingCount);
 void initializeData(Service services[]);
 void staffLogin(Service services[], Rental rentals[], Booking bookings[], int bookingCount);
 void staffAccountSelection(Service services[], Rental rentals[], Booking bookings[], int bookingCount);
@@ -85,6 +85,7 @@ void searchBookings(Service service[], Rental rentals[], Booking bookings[], int
 void displayData(Booking bookings[], int bookingCount, const string& search);
 void sortBookingsByDate(Booking bookings[], int bookingCount);
 void bookingSummaryPage(const Booking& booking);
+void deleteAppointment(Booking bookings[], int& bookingCount, Rental rentals[], Service services[]);
 void exitApplication();
 
 void initializeData(Service services[]) {
@@ -361,15 +362,16 @@ void custMenu(Service services[], Rental rentals[], Booking bookings[], int& boo
         cout << "|  " << GREEN "1: View Rental Property" << RESET "                                                     |" << endl;
         cout << "|  " << GREEN "2: Book Property" << RESET "                                                            |" << endl;
         cout << "|  " << GREEN "3: View Booking" << RESET "                                                             |" << endl;
-        cout << "|  " << RED "4: Logout" << RESET "                                                                   |" << endl;
+        cout << "|  " << GREEN "4: Delete Booking" << RESET "                                                           |" << endl;
+        cout << "|  " << RED "5: Logout" << RESET "                                                                   |" << endl;
         cout << "--------------------------------------------------------------------------------" << endl;
-        cout << "Enter your choice (1 to 4): ";
+        cout << "Enter your choice (1 to 5): ";
         while (true) {
             cin >> customerChoice;
 
-            if (cin.fail() || customerChoice < 1 || customerChoice > 4) {
+            if (cin.fail() || customerChoice < 1 || customerChoice > 5) {
                 cout << RED "Invalid choice! Please try again!" RESET << endl;
-                cout << "Enter your choice (1 to 4): ";
+                cout << "Enter your choice (1 to 5): ";
                 cin >> customerChoice;
                 cin.clear();
                 cin.ignore(numeric_limits<streamsize>::max(), '\n');
@@ -390,9 +392,13 @@ void custMenu(Service services[], Rental rentals[], Booking bookings[], int& boo
             cin.get();
             custMenu(services, rentals, bookings, bookingCount);
             break;
-        case 4:
+            case 4:
+            deleteAppointment(bookings, bookingCount, rentals, services);
+                break;
+        case 5:
             startMenu(services, rentals, bookings, bookingCount);
             break;
+        
         }
     } while (customerChoice != 4);
 }
@@ -550,7 +556,7 @@ string generateBookingID() {
 }
 
 
-void displayCalendar(Rental rentals[], Service service[], int rentalsIndex) {
+void displayCalendar(Rental rentals[], Service service[], int rentalsIndex,int bookingcounts) {
     cout << "\n\033[1;36mAvailability Calendar for " << rentals[rentalsIndex].Rentalname << " - May 2024:\033[0m\n";
     cout << "-----------------------------------------------------------\n";
     cout << "\033[1;33m Sun   Mon   Tue   Wed   Thu   Fri   Sat \033[0m\n"; // Headers in Yellow
@@ -578,7 +584,13 @@ void displayCalendar(Rental rentals[], Service service[], int rentalsIndex) {
             cout << endl;
         }
     }
-
+    if (bookingcounts == 0) {
+        for (int i = 0; i < 3; i++) { // Loop through all rentals
+            for (int j = 0; j < 31; j++) { // Loop through all days of the month
+                rentals[i].bookedDates[j] = false; // Mark all dates as available
+            }
+        }
+    }
     cout << "" << endl;
     cout << "-----------------------------------------------------------\n";
     cout << "\033[1;32mO = Available  \033[1;31mX = Booked\033[0m\n"; // Legend
@@ -830,6 +842,9 @@ void bookAppointment(Service services[], Rental rentals[], Booking bookings[], i
             cin.clear();
             cin.ignore(numeric_limits<streamsize>::max(), '\n');
         }
+        else {
+            break;
+        }
     }
 
     newBooking.propertyName = services[serviceChoice - 1].propertyName;
@@ -841,7 +856,16 @@ void bookAppointment(Service services[], Rental rentals[], Booking bookings[], i
     cout << CYAN << "*******************************************************************************\n" << RESET;
 
     // Show Calendar for the selected property
-    displayCalendar(rentals, services, serviceChoice - 1);
+    displayCalendar(rentals, services,  bookingCount,serviceChoice - 1);
+
+    bookingCount = 0; // Clear all bookings
+    if (bookingCount == 0) {
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 31; j++) {
+                rentals[i].bookedDates[j] = false;
+            }
+        }
+    }
 
     // Select Check-In Date
     int checkInDay, checkoutDate, nights;
@@ -854,8 +878,7 @@ void bookAppointment(Service services[], Rental rentals[], Booking bookings[], i
 
     cout << GREEN << "Enter Check Out Date: " << RESET;
     cin >> checkoutDate;
-
-    if (checkoutDate - checkInDay > 30) {
+    if (checkoutDate - checkInDay > 30 || checkoutDate - checkInDay <0) {
         cout << RED << "Invalid booking , exceeds calendar days.\n" << RESET;
         return;
     }
@@ -953,7 +976,6 @@ void paymentPage(Service services[], Rental rentals[], Booking& booking, Booking
     } while (!isValidCVV(cvv));
 
     cout << GREEN << "\nPayment Successful! Your booking is confirmed.\n" << RESET;
-    bookings[bookingCount++] = booking;
     system("cls");
     bookingSummaryPage(booking);
     cin.ignore();
@@ -1021,7 +1043,58 @@ void displayData(Booking bookings[], int bookingCount, const string& search) {
     }
 }
 
+void deleteAppointment(Booking bookings[], int& bookingCount, Rental rentals[], Service services[]) {
+    system("cls");
+    cout << CYAN << "*******************************************************************************" << RESET << endl;
+    cout << CYAN << "                                     PrimeStay Properties                      " << RESET << endl;
+    cout << CYAN << "*******************************************************************************\n" << RESET << endl;
 
+    if (bookingCount == 0) {
+        cout << RED << "No bookings to delete.\n" << RESET;
+        return;
+    }
+
+    string bookingID;
+    cout << GREEN << "Enter Booking ID to delete: " << RESET;
+    cin >> bookingID;
+
+    // Find the booking to delete
+    int bookingIndex = -1;
+    for (int i = 0; i < bookingCount; i++) {
+        if (bookingID == bookings[i].bookingID) {  // Compare strings
+            bookingIndex = i;
+            break;
+        }
+    }
+
+    if (bookingIndex == -1) {
+        cout << RED << "Booking ID not found.\n" << RESET;
+        return;
+    }
+
+    // Release the booked dates for the corresponding property
+    int serviceIndex = -1;
+    for (int i = 0; i < 3; i++) {
+        if (services[i].propertyName == bookings[bookingIndex].propertyName) {
+            serviceIndex = i;
+            break;
+        }
+    }
+
+    if (serviceIndex != -1) {
+        for (int i = bookings[bookingIndex].checkInDate % 100 - 1; i < (bookings[bookingIndex].checkInDate % 100 - 1) + bookings[bookingIndex].nights; i++) {
+            rentals[serviceIndex].bookedDates[i] = false;  // Mark dates as available
+        }
+    }
+
+    // Remove the booking from the array
+    for (int i = bookingIndex; i < bookingCount - 1; i++) {
+        bookings[i] = bookings[i + 1];  // Shift subsequent bookings
+    }
+
+    bookingCount--;  // Decrease booking count
+    cout << GREEN << "Booking successfully deleted.\n" << RESET;
+}
 
 void exitApplication() {
     system("cls");
