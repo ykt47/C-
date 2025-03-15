@@ -6,6 +6,7 @@
 #include <fstream>
 #include <regex>
 #include <cstring>
+#include <sstream>
 
 using namespace std;
 
@@ -58,29 +59,22 @@ bool isValidGmail(const string& email) {
     return (pos != string::npos && pos == email.length() - domain.length());
 }
 bool isValidExpiryDate(const string& expiryDate) {
-    regex expiryRegex("^(0[1-9]|1[0-2])/(\\d{2})$");  // MM/YY format validation
-
-    if (!regex_match(expiryDate, expiryRegex)) {
-        return false;  // Invalid format
+    if (expiryDate.size() != 5 || expiryDate[2] != '/') {
+        return false; // Must be in MM/YY format
     }
-
-    // Extract MM and YY
-    int month = stoi(expiryDate.substr(0, 2));
-    int year = stoi(expiryDate.substr(3, 2));
-
-    // Get current month and year
-    time_t t = time(0);
-    tm* now = localtime(&t);
-    int currentYear = now->tm_year % 100;  // Get last two digits of the year
-    int currentMonth = now->tm_mon + 1;    // tm_mon is 0-based (Jan = 0)
-
-    // Check if expiry date is in the future
-    if (year < currentYear || (year == currentYear && month < currentMonth)) {
-        return false;
+    int month, year;
+    char slash;
+    stringstream ss(expiryDate);
+    ss >> month >> slash >> year;
+    if (ss.fail() || slash != '/') {
+        return false; // Invalid input format
     }
-
-    return true;
+    if (month < 1 || month > 12) {
+        return false; // Month must be between 1 and 12
+    }
+    return true; // Year can be any valid number
 }
+
 
 
 
@@ -111,7 +105,6 @@ void sortBookingsByDate(Booking bookings[], int bookingCount);
 void bookingSummaryPage(const Booking& booking);
 void deleteAppointment(Booking bookings[], int& bookingCount, Rental rentals[], Service services[]);
 void getValidName(string& customerName);
-void getValidExpiryDate(string& expiryDate);
 void exitApplication();
 
 void initializeData(Service services[]) {
@@ -219,11 +212,11 @@ void customerStartMenu(Service services[], Rental rentals[], Booking bookings[],
     do {
         system("cls");
         cout << CYAN "********************************************************************************\n";
-        cout << "|                                PrimeStay Properties                           |\n";
+        cout << "|                                PrimeStay Properties                          |\n";
         cout << "********************************************************************************" RESET "\n";
 
-        cout << "| You are now in customer menu!                                                 |\n";
-        cout << "|                                                                               |\n";
+        cout << "| You are now in customer menu!                                                |\n";
+        cout << "|                                                                              |\n";
         cout << YELLOW "|                             1: Login                                         |\n";
         cout << "|                             2: Register                                      |\n";
         cout << "|                             3: Back to Main Menu                             |\n" RESET;
@@ -418,13 +411,13 @@ void custMenu(Service services[], Rental rentals[], Booking bookings[], int& boo
             cin.get();
             custMenu(services, rentals, bookings, bookingCount);
             break;
-            case 4:
+        case 4:
             deleteAppointment(bookings, bookingCount, rentals, services);
-                break;
+            break;
         case 5:
             startMenu(services, rentals, bookings, bookingCount);
             break;
-        
+
         }
     } while (customerChoice != 4);
 }
@@ -836,7 +829,7 @@ void bookAppointment(Service services[], Rental rentals[], Booking bookings[], i
     newBooking.bookingID = generateBookingID();
     cin.get();
     cout << GREEN << "Please Enter Your Name: " << RESET;
-    cin.ignore();  
+    cin.ignore();
     getValidName(newBooking.customerName);
 
     system("cls");
@@ -888,7 +881,7 @@ void bookAppointment(Service services[], Rental rentals[], Booking bookings[], i
 
     cout << GREEN << "Enter Check Out Date: " << RESET;
     cin >> checkoutDate;
-    if (checkoutDate - checkInDay > 30 || checkoutDate - checkInDay <0) {
+    if (checkoutDate - checkInDay > 30 || checkoutDate - checkInDay < 0) {
         cout << RED << "Invalid booking , exceeds calendar days.\n" << RESET;
         return;
     }
@@ -981,8 +974,16 @@ void paymentPage(Service services[], Rental rentals[], Booking& booking, Booking
     } while (!isValidCardNumber(cardNumber));
 
     // Get Expiry Date
-    string expiryDate;
-    getValidExpiryDate(expiryDate);
+
+    do {
+        cout << GREEN<<"Enter Expiry Date (MM/YY): "<<RESET;
+        cin >> expiryDate;
+        if (!isValidExpiryDate(expiryDate)) {
+            cout << RED"Invalid Expiry Date  (MM must be 1-12 or need /)" <<RESET <<endl;
+        }
+    } while (!isValidExpiryDate(expiryDate));
+
+    
 
     // Get CVV
     do {
@@ -1144,19 +1145,7 @@ void getValidName(string& customerName) {
     }
 }
 
-void getValidExpiryDate(string& expiryDate) {
-    while (true) {
-        cout << GREEN << "Enter Expiry Date (MM/YY): " << RESET;
-        cin >> expiryDate;
 
-        if (isValidExpiryDate(expiryDate)) {
-            break;  // Valid expiry date
-        }
-        else {
-            cout << RED << "Invalid expiry date! Please enter a valid MM/YY format (not expired).\n" << RESET;
-        }
-    }
-}
 
 void exitApplication() {
     system("cls");
