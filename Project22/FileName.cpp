@@ -1,4 +1,4 @@
-#include <iostream>
+ï»¿#include <iostream>
 #include <iomanip>  // For setting output width
 #include <ctime>
 #include <string>
@@ -27,9 +27,6 @@ struct Rental {
     double price;
     bool bookedDates[31] = { false };
     string rentaltype;
-
-
-
 };
 
 struct Booking {
@@ -78,32 +75,33 @@ bool isValidExpiryDate(const string& expiryDate) {
 
 
 
-void startMenu(Service services[], Rental rentals[], Booking bookings[], int bookingCount);
-void aboutUs(Service services[], Rental rentals[], Booking bookings[], int bookingCount);
-void customerStartMenu(Service services[], Rental rentals[], Booking bookings[], int bookingCount);
-void customerLogin(Service services[], Rental rentals[], Booking bookings[], int& bookingCount);
-void customerRegister(Service services[], Rental rentals[], Booking bookings[], int& bookingCount);
-void customerDetailsReg(Service services[], Rental rentals[], Booking bookings[], int& bookingCount);
-void custMenu(Service services[], Rental rentals[], Booking bookings[], int& bookingCount);
-void showPropertyRentalMenu(Service services[], Rental rentals[], Booking bookings[], int& bookingCount);
-void showCondoPage(Service services[], Rental rentals[], Booking bookings[], int& bookingCount);
-void showBungalowPage(Service services[], Rental rentals[], Booking bookings[], int& bookingCount);
-void showHousePage(Service services[], Rental rentals[], Booking bookings[], int& bookingCount);
-void askForHouse(const string& service, const string& rental, const string& experience, const string& achievements, Service services[], Rental rentals[], Booking bookings[], int& bookingCount);
-void displayCalendar(Rental rentals[], Service services[], int rentalsIndex);
+void startMenu(Service services[], Rental rentals[], Booking bookings[], int bookingCount, int rentalsindex, int serviceChoice);
+void aboutUs(Service services[], Rental rentals[], Booking bookings[], int bookingCount, int rentalsindex, int serviceChoice);
+void customerStartMenu(Service services[], Rental rentals[], Booking bookings[], int bookingCount, int rentalsindex, int serviceChoice);
+void customerLogin(Service services[], Rental rentals[], Booking bookings[], int& bookingCount, int rentalsindex, int serviceChoice);
+void customerRegister(Service services[], Rental rentals[], Booking bookings[], int& bookingCount, int rentalsindex, int serviceChoice);
+void customerDetailsReg(Service services[], Rental rentals[], Booking bookings[], int& bookingCount, int rentalsindex, int serviceChoice);
+void custMenu(Service services[], Rental rentals[], Booking bookings[], int& bookingCount, int rentalsindex, int serviceChoice);
+void showPropertyRentalMenu(Service services[], Rental rentals[], Booking bookings[], int& bookingCount, int rentalsindex, int serviceChoice);
+void showCondoPage(Service services[], Rental rentals[], Booking bookings[], int& bookingCount, int rentalsindex, int serviceChoice);
+void showBungalowPage(Service services[], Rental rentals[], Booking bookings[], int& bookingCount, int rentalsindex, int serviceChoice);
+void showHousePage(Service services[], Rental rentals[], Booking bookings[], int& bookingCount, int rentalsindex, int serviceChoice);
+void askForHouse(const string& service, const string& rental, const string& experience, const string& achievements, Service services[], Rental rentals[], Booking bookings[], int& bookingCount, int rentalsindex, int serviceChoice);
+
+void displayCalendar(Rental rentals[], Service services[], Booking bookings[], int serviceChoice, int rentalsindex);
 void initializeData(Service services[]);
-void staffLogin(Service services[], Rental rentals[], Booking bookings[], int bookingCount);
-void staffAccountSelection(Service services[], Rental rentals[], Booking bookings[], int bookingCount);
-void adminMenu(Service services[], Rental rentals[], Booking bookings[], int bookingCount);
-void salesReport(Service services[], Rental rentals[], Booking bookings[], int bookingCount);
-void readCustomerDetails(Service services[], Rental rentals[], Booking bookings[], int bookingCount);
-void bookAppointment(Service services[], Rental rentals[], Booking bookings[], int& bookingCount);
-void paymentPage(Service services[], Rental rentals[], Booking& booking, Booking bookings[], int& bookingCount);
+void staffLogin(Service services[], Rental rentals[], Booking bookings[], int bookingCount, int rentalsindex, int serviceChoice);
+void staffAccountSelection(Service services[], Rental rentals[], Booking bookings[], int bookingCount, int rentalsindex, int serviceChoice);
+void adminMenu(Service services[], Rental rentals[], Booking bookings[], int bookingCount, int rentalsindex, int serviceChoice);
+void salesReport(Service services[], Rental rentals[], Booking bookings[], int bookingCount, int rentalsindex, int serviceChoice);
+void readCustomerDetails(Service services[], Rental rentals[], Booking bookings[], int bookingCount, int rentalsindex, int serviceChoice);
+void bookAppointment(Service services[], Rental rentals[], Booking bookings[], int& bookingCount, int rentalsindex);
+void paymentPage(Service services[], Rental rentals[], Booking& booking, Booking bookings[], int& bookingCount, int rentalsindex, int serviceChoice);
 void searchBookings(Service service[], Rental rentals[], Booking bookings[], int bookingCount);
 void displayData(Booking bookings[], int bookingCount, const string& search);
 void sortBookingsByDate(Booking bookings[], int bookingCount);
 void bookingSummaryPage(const Booking& booking);
-void deleteAppointment(Booking bookings[], int& bookingCount, Rental rentals[], Service services[]);
+void deleteAppointment(Booking bookings[], int& bookingCount, Rental rentals[], Service services[], int rentalsindex, int serviceChoice);
 void getValidName(string& customerName);
 void exitApplication();
 
@@ -124,15 +122,17 @@ int main() {
     Service services[MAX_SERVICES];
     Booking bookings[MAX_BOOKINGS];
     Rental rentals[MAX_RENTAL];
+    int rentalsindex = 0;
+    int serviceChoice = 0;
     int bookingCount = 0;
     initializeData(services);
-    startMenu(services, rentals, bookings, bookingCount);
+    startMenu(services, rentals, bookings, bookingCount, rentalsindex, serviceChoice);
     return 0;
 }
 
 
 
-void startMenu(Service services[], Rental rentals[], Booking bookings[], int bookingCount) {
+void startMenu(Service services[], Rental rentals[], Booking bookings[], int bookingCount, int rentalsindex, int serviceChoice) {
     int choice;
     do {
         system("cls");
@@ -164,15 +164,15 @@ void startMenu(Service services[], Rental rentals[], Booking bookings[], int boo
         switch (choice) {
         case 1:
             cout << GREEN "Navigating to About Us...\n" RESET;
-            aboutUs(services, rentals, bookings, bookingCount);
+            aboutUs(services, rentals, bookings, bookingCount, rentalsindex, serviceChoice);
             break;
         case 2:
             cout << GREEN "Navigating to Customer Mode...\n" RESET;
-            customerStartMenu(services, rentals, bookings, bookingCount);
+            customerStartMenu(services, rentals, bookings, bookingCount, rentalsindex, serviceChoice);
             break;
         case 3:
             cout << GREEN "Navigating to Staff Mode...\n" RESET;
-            staffAccountSelection(services, rentals, bookings, bookingCount);
+            staffAccountSelection(services, rentals, bookings, bookingCount, rentalsindex, serviceChoice);
             break;
         case 4:
             cout << GREEN "Exiting the application...\n" RESET;
@@ -185,7 +185,7 @@ void startMenu(Service services[], Rental rentals[], Booking bookings[], int boo
 }
 
 
-void aboutUs(Service services[], Rental rentals[], Booking bookings[], int bookingCount) {
+void aboutUs(Service services[], Rental rentals[], Booking bookings[], int bookingCount, int rentalsindex, int serviceChoice) {
     system("cls");
     cout << CYAN "********************************************************************************\n";
     cout << "|                         PrimeStay Properties                                  |\n";
@@ -204,10 +204,10 @@ void aboutUs(Service services[], Rental rentals[], Booking bookings[], int booki
     cout << GREEN "Press Enter to go back to Main Menu..." RESET;
     cin.ignore();
     cin.get();
-    startMenu(services, rentals, bookings, bookingCount);
+    startMenu(services, rentals, bookings, bookingCount, rentalsindex, serviceChoice);
 }
 
-void customerStartMenu(Service services[], Rental rentals[], Booking bookings[], int bookingCount) {
+void customerStartMenu(Service services[], Rental rentals[], Booking bookings[], int bookingCount, int rentalsindex, int serviceChoice) {
     int custMenuChoice = 0;
     do {
         system("cls");
@@ -238,13 +238,13 @@ void customerStartMenu(Service services[], Rental rentals[], Booking bookings[],
         }
         switch (custMenuChoice) {
         case 1:
-            customerLogin(services, rentals, bookings, bookingCount);
+            customerLogin(services, rentals, bookings, bookingCount, rentalsindex, serviceChoice);
             break;
         case 2:
-            customerRegister(services, rentals, bookings, bookingCount);
+            customerRegister(services, rentals, bookings, bookingCount, rentalsindex, serviceChoice);
             break;
         case 3:
-            startMenu(services, rentals, bookings, bookingCount);
+            startMenu(services, rentals, bookings, bookingCount, rentalsindex, serviceChoice);
             break;
         default:
             cout << RED "Invalid option! Please try again.\n" RESET;
@@ -254,7 +254,7 @@ void customerStartMenu(Service services[], Rental rentals[], Booking bookings[],
         }
     } while (custMenuChoice < 1 || custMenuChoice > 3);
 }
-void customerLogin(Service services[], Rental rentals[], Booking bookings[], int& bookingCount) {
+void customerLogin(Service services[], Rental rentals[], Booking bookings[], int& bookingCount, int rentalsindex, int serviceChoice) {
     int count = 0;
     string username, password, usernameInput, passwordInput;
 
@@ -285,7 +285,7 @@ void customerLogin(Service services[], Rental rentals[], Booking bookings[], int
         cout << "\nPress Enter to go back to the customer account menu.";
         cin.ignore();
         cin.get();
-        custMenu(services, rentals, bookings, bookingCount);
+        custMenu(services, rentals, bookings, bookingCount, rentalsindex, serviceChoice);
     }
     else {
         cout << RED "\nLogin Error! Invalid username or password!" << endl;
@@ -293,11 +293,11 @@ void customerLogin(Service services[], Rental rentals[], Booking bookings[], int
         cout << "\nPress Enter to go back to the customer account menu.";
         cin.ignore();
         cin.get();
-        customerStartMenu(services, rentals, bookings, bookingCount);
+        customerStartMenu(services, rentals, bookings, bookingCount, rentalsindex, serviceChoice);
     }
 }
 
-void customerRegister(Service services[], Rental rentals[], Booking bookings[], int& bookingCount) {
+void customerRegister(Service services[], Rental rentals[], Booking bookings[], int& bookingCount, int rentalsindex, int serviceChoice) {
     string registeredUser, registeredPass;
 
     system("cls");
@@ -321,10 +321,10 @@ void customerRegister(Service services[], Rental rentals[], Booking bookings[], 
     cout << "Press Enter to proceed to the next page.";
     cin.ignore();
     cin.get();
-    customerDetailsReg(services, rentals, bookings, bookingCount);
+    customerDetailsReg(services, rentals, bookings, bookingCount, rentalsindex, serviceChoice);
 }
 
-void customerDetailsReg(Service services[], Rental rentals[], Booking bookings[], int& bookingCount) {
+void customerDetailsReg(Service services[], Rental rentals[], Booking bookings[], int& bookingCount, int rentalsindex, int serviceChoice) {
     string fullnameUser, Useremail, phoneNumber;
 
     system("cls");
@@ -365,9 +365,9 @@ void customerDetailsReg(Service services[], Rental rentals[], Booking bookings[]
 
     cin.ignore();
     cin.get();
-    customerStartMenu(services, rentals, bookings, bookingCount);
+    customerStartMenu(services, rentals, bookings, bookingCount, rentalsindex, serviceChoice);
 }
-void custMenu(Service services[], Rental rentals[], Booking bookings[], int& bookingCount) {
+void custMenu(Service services[], Rental rentals[], Booking bookings[], int& bookingCount, int rentalsindex, int serviceChoice) {
     int customerChoice = 0;
     do {
         system("cls");
@@ -388,7 +388,7 @@ void custMenu(Service services[], Rental rentals[], Booking bookings[], int& boo
         while (true) {
             cin >> customerChoice;
 
-            if (cin.fail() || customerChoice < 1 || customerChoice > 5) {
+            if (cin.fail() || customerChoice < 1 || customerChoice > 6) {
                 cout << RED "Invalid choice! Please try again!" RESET << endl;
                 cout << "Enter your choice (1 to 5): ";
                 cin >> customerChoice;
@@ -401,28 +401,28 @@ void custMenu(Service services[], Rental rentals[], Booking bookings[], int& boo
         }
         switch (customerChoice) {
         case 1:
-            showPropertyRentalMenu(services, rentals, bookings, bookingCount);
+            showPropertyRentalMenu(services, rentals, bookings, bookingCount, rentalsindex, serviceChoice);
             break;
         case 2:
-            bookAppointment(services, rentals, bookings, bookingCount);
+            bookAppointment(services, rentals, bookings, bookingCount, rentalsindex);
             break;
         case 3:
             searchBookings(services, rentals, bookings, bookingCount);
             cin.get();
-            custMenu(services, rentals, bookings, bookingCount);
+            custMenu(services, rentals, bookings, bookingCount, rentalsindex, serviceChoice);
             break;
         case 4:
-            deleteAppointment(bookings, bookingCount, rentals, services);
+            deleteAppointment(bookings, bookingCount, rentals, services, rentalsindex, serviceChoice);
             break;
         case 5:
-            startMenu(services, rentals, bookings, bookingCount);
+            startMenu(services, rentals, bookings, bookingCount, rentalsindex, serviceChoice);
             break;
 
         }
     } while (customerChoice != 4);
 }
 
-void showPropertyRentalMenu(Service services[], Rental rentals[], Booking bookings[], int& bookingCount) {
+void showPropertyRentalMenu(Service services[], Rental rentals[], Booking bookings[], int& bookingCount, int rentalsindex, int serviceChoice) {
     char choiceServices;
     system("CLS");
 
@@ -454,14 +454,13 @@ void showPropertyRentalMenu(Service services[], Rental rentals[], Booking bookin
 
     switch (choiceServices) {
     case 'A': case 'a':
-        showCondoPage(services, rentals, bookings, bookingCount);
+        showCondoPage(services, rentals, bookings, bookingCount, rentalsindex, serviceChoice);
         break;
     case 'B': case 'b':
-        showBungalowPage(services, rentals, bookings, bookingCount);
+        showBungalowPage(services, rentals, bookings, bookingCount, rentalsindex, serviceChoice);
         break;
     case 'C': case 'c':
-        showHousePage(services, rentals, bookings, bookingCount);
-        break;
+        showHousePage(services, rentals, bookings, bookingCount, rentalsindex, serviceChoice);
     case 'M': case 'm':
         return;
     default:
@@ -469,7 +468,7 @@ void showPropertyRentalMenu(Service services[], Rental rentals[], Booking bookin
     }
 }
 
-void showCondoPage(Service services[], Rental rentals[], Booking bookings[], int& bookingCount) {
+void showCondoPage(Service services[], Rental rentals[], Booking bookings[], int& bookingCount, int rentalsindex, int serviceChoice) {
     system("CLS");
 
     cout << BLUE "+----------------------------------------------------------------------------------------------------------------------------------------+" << endl;
@@ -480,17 +479,17 @@ void showCondoPage(Service services[], Rental rentals[], Booking bookings[], int
     cout << "|  amenities. With contemporary architecture and luxurious interiors, it provides a sophisticated lifestyle in the heart of the city.    |" RESET << endl;
 
     cout << GREEN "| Benefits:                                                                                                                              |" << endl;
-    cout << "| 1. Prime Location – Close to business districts, shopping malls, and entertainment hubs.                                               |" << endl;
-    cout << "| 2. Stunning Views – Panoramic skyline and sunset views from high-rise floors.                                                          |" << endl;
-    cout << "| 3. Premium Amenities – Includes pools, gym, co-working spaces, and 24/7 security.                                                      |" << endl;
-    cout << "| 4. Smart Living – Equipped with smart home technology.                                                                                 |" << endl;
-    cout << "| 5. Investment Value – High rental demand and great resale potential.                                                                   |" RESET << endl;
+    cout << "| 1. Prime Location â€“ Close to business districts, shopping malls, and entertainment hubs.                                               |" << endl;
+    cout << "| 2. Stunning Views â€“ Panoramic skyline and sunset views from high-rise floors.                                                          |" << endl;
+    cout << "| 3. Premium Amenities â€“ Includes pools, gym, co-working spaces, and 24/7 security.                                                      |" << endl;
+    cout << "| 4. Smart Living â€“ Equipped with smart home technology.                                                                                 |" << endl;
+    cout << "| 5. Investment Value â€“ High rental demand and great resale potential.                                                                   |" RESET << endl;
 
     cout << "+----------------------------------------------------------------------------------------------------------------------------------------+" << endl;
-    askForHouse("Condominium", "Skyline Residences ", "3 Bedroom & 2 Bathroom", "Jalan Jalil 2, Bukit Jalil, Kuala Lumpur", services, rentals, bookings, bookingCount);
+    askForHouse("Condominium", "Skyline Residences ", "3 Bedroom & 2 Bathroom", "Jalan Jalil 2, Bukit Jalil, Kuala Lumpur", services, rentals, bookings, bookingCount, rentalsindex, serviceChoice);
 }
 
-void showBungalowPage(Service services[], Rental rentals[], Booking bookings[], int& bookingCount) {
+void showBungalowPage(Service services[], Rental rentals[], Booking bookings[], int& bookingCount, int rentalsindex, int serviceChoice) {
     system("CLS");
 
     cout << BLUE "+----------------------------------------------------------------------------------------------------------------------------------------------------------+" << endl;
@@ -500,17 +499,17 @@ void showBungalowPage(Service services[], Rental rentals[], Booking bookings[], 
     cout << YELLOW "| Evergreen Cottage is a charming bungalow that blends comfort and nature, offering a peaceful retreat for families and retirees.                          |" RESET << endl;
 
     cout << GREEN "| Benefits:                                                                                                                                                |" << endl;
-    cout << "| 1. Serene Atmosphere – Located in a quiet, nature-filled area for relaxation.                                                                            |" << endl;
-    cout << "| 2. Spacious Living – Large interiors and outdoor space for gatherings.                                                                                   |" << endl;
-    cout << "| 3. Energy Efficiency – Built with eco-friendly materials and natural ventilation.                                                                        |" << endl;
-    cout << "| 4. Privacy & Security – Standalone property with a gated entrance.                                                                                       |" << endl;
-    cout << "| 5. Customizable Design – Freedom to renovate as per lifestyle needs.                                                                                     |" RESET << endl;
+    cout << "| 1. Serene Atmosphere â€“ Located in a quiet, nature-filled area for relaxation.                                                                            |" << endl;
+    cout << "| 2. Spacious Living â€“ Large interiors and outdoor space for gatherings.                                                                                   |" << endl;
+    cout << "| 3. Energy Efficiency â€“ Built with eco-friendly materials and natural ventilation.                                                                        |" << endl;
+    cout << "| 4. Privacy & Security â€“ Standalone property with a gated entrance.                                                                                       |" << endl;
+    cout << "| 5. Customizable Design â€“ Freedom to renovate as per lifestyle needs.                                                                                     |" RESET << endl;
 
     cout << "+----------------------------------------------------------------------------------------------------------------------------------------------------------+" << endl;
-    askForHouse("Bungalow", "Evergreen Cottage", "8 Bedroom & 6 Bathroom", "Taman Pantai Bangsar, Bangsar, Kuala Lumpur", services, rentals, bookings, bookingCount);
+    askForHouse("Bungalow", "Evergreen Cottage", "8 Bedroom & 6 Bathroom", "Taman Pantai Bangsar, Bangsar, Kuala Lumpur", services, rentals, bookings, bookingCount, rentalsindex, serviceChoice);
 }
 
-void showHousePage(Service services[], Rental rentals[], Booking bookings[], int& bookingCount) {
+void showHousePage(Service services[], Rental rentals[], Booking bookings[], int& bookingCount, int rentalsindex, int serviceChoice) {
     system("CLS");
 
     cout << BLUE "+------------------------------------------------------------------------------------------------------------------------------------------+" << endl;
@@ -520,17 +519,17 @@ void showHousePage(Service services[], Rental rentals[], Booking bookings[], int
     cout << YELLOW "| Amberwood Residences is a stylish terrace housing development offering modern design and a warm community environment.                   |" RESET << endl;
 
     cout << GREEN "| Benefits:                                                                                                                                |" << endl;
-    cout << "| 1. Community Living – Encourages a friendly and connected neighborhood.                                                                  |" << endl;
-    cout << "| 2. Modern & Stylish Design – Contemporary architecture with functional layouts.                                                          |" << endl;
-    cout << "| 3. Convenient Accessibility – Close to schools, supermarkets, and public transport.                                                      |" << endl;
-    cout << "| 4. Affordable Luxury – High-quality living at a reasonable price.                                                                        |" << endl;
-    cout << "| 5. Low Maintenance – Easy upkeep compared to larger properties.                                                                          |" RESET << endl;
+    cout << "| 1. Community Living â€“ Encourages a friendly and connected neighborhood.                                                                  |" << endl;
+    cout << "| 2. Modern & Stylish Design â€“ Contemporary architecture with functional layouts.                                                          |" << endl;
+    cout << "| 3. Convenient Accessibility â€“ Close to schools, supermarkets, and public transport.                                                      |" << endl;
+    cout << "| 4. Affordable Luxury â€“ High-quality living at a reasonable price.                                                                        |" << endl;
+    cout << "| 5. Low Maintenance â€“ Easy upkeep compared to larger properties.                                                                          |" RESET << endl;
 
     cout << "+------------------------------------------------------------------------------------------------------------------------------------------+" << endl;
-    askForHouse("Terrace house", "Amberwood Residences ", "6 Bedroom & 4 Bathroom", "City of Elmina, Shah Alam, Selangor", services, rentals, bookings, bookingCount);
+    askForHouse("Terrace house", "Amberwood Residences ", "6 Bedroom & 4 Bathroom", "City of Elmina, Shah Alam, Selangor", services, rentals, bookings, bookingCount, rentalsindex, serviceChoice);
 }
 void askForHouse(const string& service, const string& rental, const string& experience, const string& location,
-    Service services[], Rental rentals[], Booking bookings[], int& bookingCount) {
+    Service services[], Rental rentals[], Booking bookings[], int& bookingCount, int rentalsindex, int serviceChoice) {
     char choiceproperty;
 
     cout << YELLOW "\nAre you interested to know more about this property? (y/n): " RESET;
@@ -552,10 +551,10 @@ void askForHouse(const string& service, const string& rental, const string& expe
             cout << "\n" YELLOW "Press Enter to go back to the Services Menu..." RESET << endl;
             cin.ignore();
             cin.get();
-            custMenu(services, rentals, bookings, bookingCount);
+            custMenu(services, rentals, bookings, bookingCount, rentalsindex, serviceChoice);
         }
         else if (choiceproperty == 'n' || choiceproperty == 'N') {
-            custMenu(services, rentals, bookings, bookingCount);
+            custMenu(services, rentals, bookings, bookingCount, rentalsindex, serviceChoice);
             return;
         }
         else {
@@ -575,24 +574,25 @@ string generateBookingID() {
 }
 
 
-void displayCalendar(Rental rentals[], Service service[], int rentalsIndex) {
 
-    cout << "\n\033[1;36mAvailability Calendar for " << rentals[rentalsIndex].Rentalname << " - May 2024:\033[0m\n";
+void displayCalendar(Rental rentals[], Service services[], Booking bookings[], int serviceChoice, int rentalsindex) {
+    system("cls");
+
+    cout << "\n\033[1;36mAvailability Calendar for " << services[serviceChoice].propertyName << " - May 2024:\033[0m\n";
     cout << "-----------------------------------------------------------\n";
-    cout << "\033[1;33m Sun   Mon   Tue   Wed   Thu   Fri   Sat \033[0m\n"; // Headers in Yellow
+    cout << "\033[1;33m Sun   Mon   Tue   Wed   Thu   Fri   Sat \033[0m\n";
     cout << "-----------------------------------------------------------\n";
 
     int firstDayOffset = 2; // May 1, 2024, starts on Wednesday
 
     // Print leading spaces for the first week
     for (int i = 0; i < firstDayOffset; i++) {
-        cout << "      ";  // Empty spaces for alignment
+        cout << "      ";
     }
 
     // Print calendar days
-
     for (int day = 1; day <= 30; day++) {
-        if (rentals[rentalsIndex].bookedDates[day]) {
+        if (rentals[serviceChoice].bookedDates[day - 1]) { // âœ… Correct property and index
             cout << "\033[1;31m " << setw(2) << day << " X \033[0m"; // Red 'X' for booked days
         }
         else {
@@ -600,12 +600,15 @@ void displayCalendar(Rental rentals[], Service service[], int rentalsIndex) {
         }
 
         // Break line after every Saturday (7-day week)
-        if ((day + firstDayOffset) % 7 == 0 || day == 31) {
+        if ((day + firstDayOffset) % 7 == 0 || day == 30) {
             cout << endl;
         }
     }
+
+    cout << "-----------------------------------------------------------\n";
+    cout << GREEN << "Available = O " << RED << " Unavailable = X" << endl;
 }
-void staffAccountSelection(Service services[], Rental rentals[], Booking bookings[], int bookingCount) {
+void staffAccountSelection(Service services[], Rental rentals[], Booking bookings[], int bookingCount, int rentalsindex, int serviceChoice) {
     int staffStartChoice = 0;
     do {
         system("cls");
@@ -630,10 +633,10 @@ void staffAccountSelection(Service services[], Rental rentals[], Booking booking
         }
         switch (staffStartChoice) {
         case 1:
-            staffLogin(services, rentals, bookings, bookingCount);
+            staffLogin(services, rentals, bookings, bookingCount, rentalsindex, serviceChoice);
             break;
         case 2:
-            startMenu(services, rentals, bookings, bookingCount);
+            startMenu(services, rentals, bookings, bookingCount, rentalsindex, serviceChoice);
             break;
         default:
             break;
@@ -642,7 +645,7 @@ void staffAccountSelection(Service services[], Rental rentals[], Booking booking
     } while (staffStartChoice < 1 || staffStartChoice > 2);
 }
 
-void staffLogin(Service services[], Rental rentals[], Booking bookings[], int bookingCount) {
+void staffLogin(Service services[], Rental rentals[], Booking bookings[], int bookingCount, int rentalsindex, int servicechoice) {
     system("cls");
     cout << CYAN << "********************************************************************************" << RESET << endl;
     cout << BLUE << "|                               PrimeStay Properties                           |" << RESET << endl;
@@ -673,13 +676,13 @@ void staffLogin(Service services[], Rental rentals[], Booking bookings[], int bo
             cout << RED << "Invalid password, please try again!\n" << RESET << endl;
         }
         else {
-            adminMenu(services, rentals, bookings, bookingCount);
+            adminMenu(services, rentals, bookings, bookingCount, rentalsindex, servicechoice);
             break;
         }
     }
 }
 //admin Menu
-void adminMenu(Service services[], Rental rentals[], Booking bookings[], int bookingCount) {
+void adminMenu(Service services[], Rental rentals[], Booking bookings[], int bookingCount, int rentalsindex, int servicechoice) {
     int adminChoice = 0;
     do {
         system("cls");
@@ -694,9 +697,9 @@ void adminMenu(Service services[], Rental rentals[], Booking bookings[], int boo
         cout << "|                             4: Logout                                        |" << endl;
         cout << "--------------------------------------------------------------------------------" << endl;
         while (true) {
-            cout << "Enter your choice (1 to 4): ";
+            cout << "Enter your choice (1 to 5): ";
             cin >> adminChoice;
-            if (!cin.fail() && adminChoice >= 1 && adminChoice <= 4) {
+            if (!cin.fail() && adminChoice >= 1 && adminChoice <= 5) {
                 break;
             }
 
@@ -709,24 +712,24 @@ void adminMenu(Service services[], Rental rentals[], Booking bookings[], int boo
         case 1:
             searchBookings(services, rentals, bookings, bookingCount);
             cin.get();
-            adminMenu(services, rentals, bookings, bookingCount);
+            adminMenu(services, rentals, bookings, bookingCount, rentalsindex, servicechoice);
             break;
         case 2:
-            readCustomerDetails(services, rentals, bookings, bookingCount);
+            readCustomerDetails(services, rentals, bookings, bookingCount, rentalsindex, servicechoice);
             break;
         case 3:
-            salesReport(services, rentals, bookings, bookingCount);
+            salesReport(services, rentals, bookings, bookingCount, rentalsindex, servicechoice);
             break;
-        case 4:
-            startMenu(services, rentals, bookings, bookingCount);
+        case 4: startMenu(services, rentals, bookings, bookingCount, rentalsindex, servicechoice);
             break;
+
         default:
             break;
         }
-    } while (adminChoice < 1 || adminChoice > 4);
+    } while (adminChoice < 1 || adminChoice > 5);
 }
 
-void readCustomerDetails(Service services[], Rental rentals[], Booking bookings[], int bookingCount) {
+void readCustomerDetails(Service services[], Rental rentals[], Booking bookings[], int bookingCount, int rentalsindex, int serviceChoice) {
     system("cls");
     ifstream infile;
     string fullname, Useremail;
@@ -751,9 +754,9 @@ void readCustomerDetails(Service services[], Rental rentals[], Booking bookings[
     cout << "\n\nPress Enter to go back to admin menu! " << endl;
     cin.ignore();
     cin.get(); // Wait for user input
-    adminMenu(services, rentals, bookings, bookingCount);
+    adminMenu(services, rentals, bookings, bookingCount, rentalsindex, serviceChoice);
 }
-void salesReport(Service services[], Rental rentals[], Booking bookings[], int bookingCount) {
+void salesReport(Service services[], Rental rentals[], Booking bookings[], int bookingCount, int rentalsindex, int serviceChoice) {
     int num_condo = 0;
     int num_bung = 0;
     int num_house = 0;
@@ -811,10 +814,10 @@ void salesReport(Service services[], Rental rentals[], Booking bookings[], int b
     cout << RED << "\nPress Enter to continue..." << RESET;
     cin.ignore();
     cin.get();
-    adminMenu(services, rentals, bookings, bookingCount);
+    adminMenu(services, rentals, bookings, bookingCount, rentalsindex, serviceChoice);
 }
 
-void bookAppointment(Service services[], Rental rentals[], Booking bookings[], int& bookingCount) {
+void bookAppointment(Service services[], Rental rentals[], Booking bookings[], int& bookingCount, int rentalsindex) {
     system("cls");  // Clear previous content
     cout << CYAN << "*******************************************************************************" << RESET << endl;
     cout << BLUE << "                                PrimeStay Properties                           " << RESET << endl;
@@ -824,6 +827,7 @@ void bookAppointment(Service services[], Rental rentals[], Booking bookings[], i
         cout << RED << "All bookings are full. Please try again later.\n" << RESET;
         return;
     }
+
 
     Booking newBooking;
     newBooking.bookingID = generateBookingID();
@@ -838,7 +842,7 @@ void bookAppointment(Service services[], Rental rentals[], Booking bookings[], i
     cout << CYAN << "*******************************************************************************\n" << RESET;
 
     // Choose Property
-    cout << GREEN << "Available Properties:\n" << RESET;
+    cout << GREEN << "Available Properties  :\n" << RESET;
     for (int serviceIndex = 0; serviceIndex < 3; serviceIndex++) {
         cout << YELLOW << serviceIndex + 1 << ". " << services[serviceIndex].propertyName << " - RM " << services[serviceIndex].price << RESET << "\n";
     }
@@ -867,7 +871,7 @@ void bookAppointment(Service services[], Rental rentals[], Booking bookings[], i
     cout << CYAN << "*******************************************************************************\n" << RESET;
 
     // Show Calendar for the selected property
-    displayCalendar(rentals, services, serviceChoice - 1);
+    displayCalendar(rentals, services, bookings, serviceChoice - 1, rentalsindex);
 
 
     // Select Check-In Date
@@ -906,18 +910,13 @@ void bookAppointment(Service services[], Rental rentals[], Booking bookings[], i
         cout << "Please select another check-in day and number of nights.\n";
         return;
     }
+
     // Confirm Check-In and Book Dates
-    for (int i = checkInDay; i < checkoutDate; i++) {  // Ensure correct range
-        rentals[serviceChoice - 1].bookedDates[i] = true;  // Book the selected dates
+    for (int i = checkInDay - 1; i < checkoutDate; i++) {
+        rentals[serviceChoice - 1].bookedDates[i] = true;
     }
 
 
-    // Save booking
-    newBooking.checkInDate = 20250500 + checkInDay;
-    newBooking.checkoutDate = 2020500 + checkoutDate;
-    newBooking.nights = checkoutDate - checkInDay;
-    newBooking.price = services[serviceChoice - 1].price * nights;
-    bookings[bookingCount++] = newBooking;
 
     // Save booking
     newBooking.checkInDate = 20250500 + checkInDay;
@@ -925,6 +924,7 @@ void bookAppointment(Service services[], Rental rentals[], Booking bookings[], i
     newBooking.nights = checkoutDate - checkInDay;
     newBooking.price = services[serviceChoice - 1].price * nights;
     bookings[bookingCount++] = newBooking;
+
 
     cout << GREEN << "\nBooking Successful! Check-Out will be on Day " << (checkInDay + nights) << " (Maintenance follows after checkout)\n" << RESET;
     cin.ignore();
@@ -935,7 +935,7 @@ void bookAppointment(Service services[], Rental rentals[], Booking bookings[], i
     cout << CYAN << "*******************************************************************************\n" << RESET;
     cout << YELLOW << "Please press Enter to proceed to payment." << RESET;
     cin.get();
-    paymentPage(services, rentals, newBooking, bookings, bookingCount);
+    paymentPage(services, rentals, newBooking, bookings, bookingCount, rentalsindex, serviceChoice);
 }
 
 // Validate Card Number (must be 12 digits)
@@ -950,7 +950,7 @@ bool isValidCVV(const string& cvv) {
     return all_of(cvv.begin(), cvv.end(), ::isdigit);
 }
 
-void paymentPage(Service services[], Rental rentals[], Booking& booking, Booking bookings[], int& bookingCount) {
+void paymentPage(Service services[], Rental rentals[], Booking& booking, Booking bookings[], int& bookingCount, int rentalsindex, int serviceChoice) {
     string cardNumber, expiryDate, cvv;
     system("cls");
 
@@ -976,14 +976,14 @@ void paymentPage(Service services[], Rental rentals[], Booking& booking, Booking
     // Get Expiry Date
 
     do {
-        cout << GREEN<<"Enter Expiry Date (MM/YY): "<<RESET;
+        cout << GREEN << "Enter Expiry Date (MM/YY): " << RESET;
         cin >> expiryDate;
         if (!isValidExpiryDate(expiryDate)) {
-            cout << RED"Invalid Expiry Date  (MM must be 1-12 or need /)" <<RESET <<endl;
+            cout << RED"Invalid Expiry Date  (MM must be 1-12 or need /)" << RESET << endl;
         }
     } while (!isValidExpiryDate(expiryDate));
 
-    
+
 
     // Get CVV
     do {
@@ -1002,7 +1002,7 @@ void paymentPage(Service services[], Rental rentals[], Booking& booking, Booking
     cout << YELLOW << "Press Enter to return to the customer menu." << RESET;
     cin.ignore();
     cin.get();
-    custMenu(services, rentals, bookings, bookingCount);
+    custMenu(services, rentals, bookings, bookingCount, rentalsindex, serviceChoice);
 
 }
 void bookingSummaryPage(const Booking& booking) {
@@ -1012,7 +1012,7 @@ void bookingSummaryPage(const Booking& booking) {
     cout << YELLOW"\nBooking Summary\n";
     cout << YELLOW"Booking ID: " << booking.bookingID << "\n";
     cout << YELLOW"Customer Name: " << booking.customerName << "\n";
-    cout << YELLOW"Property type: " << booking.propertyName << "\n";
+    cout << YELLOW"Property Name: " << booking.propertyName << "\n";
     cout << YELLOW"Check In Date: " << booking.checkInDate << "\n";
     cout << YELLOW"Total nights:" << booking.nights << "\n";
     cout << YELLOW"Total Price: $" << booking.price << "\n";
@@ -1053,15 +1053,18 @@ void displayData(Booking bookings[], int bookingCount, const string& search) {
             cout << YELLOW "Check-in Date  : " RESET << bookings[i].checkInDate << endl;
             cout << GREEN "Total Nights   : " RESET << bookings[i].nights << endl;
             cout << CYAN "------------------------------------------------\n" RESET;
-            break;
         }
     }
 
     if (!found) {
-        cout << RED "No booking found for the given search term.\n" RESET;
+        cout << RED "No bookings found.\n" RESET;
     }
 }
-void deleteAppointment(Booking bookings[], int& bookingCount, Rental rentals[], Service services[]) {
+
+
+
+
+void deleteAppointment(Booking bookings[], int& bookingCount, Rental rentals[], Service services[], int rentalsindex, int serviceChoice) {
     system("cls");
     cout << CYAN << "*******************************************************************************" << RESET << endl;
     cout << CYAN << "                                     PrimeStay Properties                      " << RESET << endl;
@@ -1071,7 +1074,7 @@ void deleteAppointment(Booking bookings[], int& bookingCount, Rental rentals[], 
         cout << RED << "No bookings to delete.\n" << RESET;
         cin.ignore();
         cin.get();
-        custMenu(services, rentals, bookings, bookingCount);
+        custMenu(services, rentals, bookings, bookingCount, rentalsindex, serviceChoice);
         return;
     }
 
@@ -1093,7 +1096,7 @@ void deleteAppointment(Booking bookings[], int& bookingCount, Rental rentals[], 
         cout << RED << "Press Enter to go back.\n" << RESET;
         cin.ignore();
         cin.get();
-        custMenu(services, rentals, bookings, bookingCount);
+        custMenu(services, rentals, bookings, bookingCount, rentalsindex, serviceChoice);
         return;
     }
 
@@ -1137,7 +1140,7 @@ void getValidName(string& customerName) {
         getline(cin, customerName);
 
         if (regex_match(customerName, alphaRegex)) {
-            break;  // Valid input, exit loop
+            break;
         }
         else {
             cout << RED << "Invalid name! Please enter only alphabetic characters.\n" << RESET;
