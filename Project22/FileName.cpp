@@ -1,4 +1,4 @@
-﻿#include <iostream>
+#include <iostream>
 #include <iomanip>  // For setting output width
 #include <ctime>
 #include <string>
@@ -95,7 +95,7 @@ void staffAccountSelection(Service services[], Rental rentals[], Booking booking
 void adminMenu(Service services[], Rental rentals[], Booking bookings[], int bookingCount, int rentalsindex, int serviceChoice);
 void salesReport(Service services[], Rental rentals[], Booking bookings[], int bookingCount, int rentalsindex, int serviceChoice);
 void readCustomerDetails(Service services[], Rental rentals[], Booking bookings[], int bookingCount, int rentalsindex, int serviceChoice);
-void bookAppointment(Service services[], Rental rentals[], Booking bookings[], int& bookingCount, int rentalsindex,int servicechoice);
+void bookAppointment(Service services[], Rental rentals[], Booking bookings[], int& bookingCount, int rentalsindex, int servicechoice);
 void paymentPage(Service services[], Rental rentals[], Booking& booking, Booking bookings[], int& bookingCount, int rentalsindex, int serviceChoice);
 void searchBookings(Service service[], Rental rentals[], Booking bookings[], int bookingCount);
 void displayData(Booking bookings[], int bookingCount, const string& search);
@@ -146,7 +146,7 @@ void startMenu(Service services[], Rental rentals[], Booking bookings[], int boo
         cout << "|                            3. Staff Mode                                     |\n";
         cout << "|                            4. Exit                                           |\n" RESET;
         cout << "--------------------------------------------------------------------------------\n";
-        
+
 
         while (true) {
             cout << "Enter your option (1 to 4): ";
@@ -220,7 +220,7 @@ void customerStartMenu(Service services[], Rental rentals[], Booking bookings[],
         cout << "|                             2: Register                                      |\n";
         cout << "|                             3: Back to Main Menu                             |\n" RESET;
         cout << "--------------------------------------------------------------------------------\n";
- 
+
         while (true) {
             cout << "Enter your option (1 to 3): ";
             cin >> custMenuChoice;
@@ -254,7 +254,7 @@ void customerStartMenu(Service services[], Rental rentals[], Booking bookings[],
 }
 void customerLogin(Service services[], Rental rentals[], Booking bookings[], int& bookingCount, int rentalsindex, int serviceChoice) {
     int count = 0;
-    string username, password, usernameInput, passwordInput,choice;
+    string username, password, usernameInput, passwordInput, choice;
 
     system("cls");
     cout << CYAN "*******************************************************************************" << endl;
@@ -303,7 +303,7 @@ void customerLogin(Service services[], Rental rentals[], Booking bookings[], int
 }
 
 void customerRegister(Service services[], Rental rentals[], Booking bookings[], int& bookingCount, int rentalsindex, int serviceChoice) {
-    string registeredUser, registeredPass,choice;
+    string registeredUser, registeredPass, choice;
 
     system("cls");
     cout << CYAN "*******************************************************************************" << endl;
@@ -396,7 +396,7 @@ void custMenu(Service services[], Rental rentals[], Booking bookings[], int& boo
         cout << "|  " << GREEN "4: Delete Booking" << RESET "                                                           |" << endl;
         cout << "|  " << RED "5: Logout" << RESET "                                                                   |" << endl;
         cout << "--------------------------------------------------------------------------------" << endl;
-    
+
         while (true) {
             cout << "Enter your choice (1 to 5): ";
             cin >> customerChoice;
@@ -415,7 +415,7 @@ void custMenu(Service services[], Rental rentals[], Booking bookings[], int& boo
             showPropertyRentalMenu(services, rentals, bookings, bookingCount, rentalsindex, serviceChoice);
             break;
         case 2:
-            bookAppointment(services, rentals, bookings, bookingCount, rentalsindex,serviceChoice);
+            bookAppointment(services, rentals, bookings, bookingCount, rentalsindex, serviceChoice);
             break;
         case 3:
             searchBookings(services, rentals, bookings, bookingCount);
@@ -678,7 +678,7 @@ void staffLogin(Service services[], Rental rentals[], Booking bookings[], int bo
         return; // Ensure function exits after going back
     }
 
- 
+
     while (true) {
         cout << "Enter Admin Username: ";
         getline(cin, adminusernameInput);
@@ -838,7 +838,7 @@ void salesReport(Service services[], Rental rentals[], Booking bookings[], int b
     adminMenu(services, rentals, bookings, bookingCount, rentalsindex, serviceChoice);
 }
 
-void bookAppointment(Service services[], Rental rentals[], Booking bookings[], int& bookingCount, int rentalsindex,int servicechoice) {
+void bookAppointment(Service services[], Rental rentals[], Booking bookings[], int& bookingCount, int rentalsindex, int servicechoice) {
     system("cls");  // Clear previous content
     cout << CYAN << "*******************************************************************************" << RESET << endl;
     cout << BLUE << "                                PrimeStay Properties                           " << RESET << endl;
@@ -904,20 +904,30 @@ void bookAppointment(Service services[], Rental rentals[], Booking bookings[], i
 
     // Select Check-In Date
     int checkInDay, checkoutDate, nights;
-    cout << GREEN << "\nEnter Check-In Day (1-31): " << RESET;
-    cin >> checkInDay;
-    if (checkInDay < 1 || checkInDay > 31) {
-        cout << RED << "Invalid day selection.\n" << RESET;
-        return;
+    while (true) {
+        cout << GREEN << "\nEnter Check-In Day (1-31): " << RESET;
+        cin >> checkInDay;
+        if (checkInDay < 1 || checkInDay > 31) {
+            cout << RED << "Invalid day selection.\n" << RESET;
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        }
+        else {
+            break;
+        }
     }
-
-    cout << GREEN << "Enter Check Out Date: " << RESET;
-    cin >> checkoutDate;
-    if (checkoutDate - checkInDay > 30 || checkoutDate - checkInDay < 0) {
-        cout << RED << "Invalid booking , exceeds calendar days.\n" << RESET;
-        return;
+    while (true) {
+        cout << GREEN << "Enter Check Out Date (1-31): " << RESET;
+        cin >> checkoutDate;
+        if (checkoutDate - checkInDay > 30 || checkoutDate - checkInDay < 0) {
+            cout << RED << "Invalid booking , exceeds calendar days.\n" << RESET;
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');;
+        }
+        else {
+            break;
+        }
     }
-
     nights = checkoutDate - checkInDay;
     if (nights > 30) {
         cout << "Invalid booking, exceeds calendar days.\n";
