@@ -656,8 +656,19 @@ void staffLogin(Service services[], Rental rentals[], Booking bookings[], int bo
     string adminusernameInput = " ";
     string adminpasswordInput = " ";
 
-    cout << YELLOW << "You are now in admin mode!\nPlease login to proceed!\n\n" << RESET;
+    cout << YELLOW << "You are now in admin mode!\n " << RESET;
+    cout << YELLOW << "\nPress B to go back or Press C to continue.\n" << RESET;
+    getline(cin, choice);
 
+    if (choice == "b" || choice == "B") {
+        staffAccountSelection(services, rentals, bookings, bookingCount, rentalsindex, servicechoice);
+        return; // Ensure function exits after going back
+    }
+
+    if (choice != "c" && choice != "C") {
+        cout << RED << "Invalid input! Please press C to continue.\n" << RESET;
+        return;
+    }
     while (true) {
         cout << "Enter Admin Username: ";
         cin >> adminusernameInput;
