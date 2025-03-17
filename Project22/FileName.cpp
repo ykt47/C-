@@ -95,7 +95,7 @@ void staffAccountSelection(Service services[], Rental rentals[], Booking booking
 void adminMenu(Service services[], Rental rentals[], Booking bookings[], int bookingCount, int rentalsindex, int serviceChoice);
 void salesReport(Service services[], Rental rentals[], Booking bookings[], int bookingCount, int rentalsindex, int serviceChoice);
 void readCustomerDetails(Service services[], Rental rentals[], Booking bookings[], int bookingCount, int rentalsindex, int serviceChoice);
-void bookAppointment(Service services[], Rental rentals[], Booking bookings[], int& bookingCount, int rentalsindex);
+void bookAppointment(Service services[], Rental rentals[], Booking bookings[], int& bookingCount, int rentalsindex,int servicechoice);
 void paymentPage(Service services[], Rental rentals[], Booking& booking, Booking bookings[], int& bookingCount, int rentalsindex, int serviceChoice);
 void searchBookings(Service service[], Rental rentals[], Booking bookings[], int bookingCount);
 void displayData(Booking bookings[], int bookingCount, const string& search);
@@ -146,14 +146,13 @@ void startMenu(Service services[], Rental rentals[], Booking bookings[], int boo
         cout << "|                            3. Staff Mode                                     |\n";
         cout << "|                            4. Exit                                           |\n" RESET;
         cout << "--------------------------------------------------------------------------------\n";
-        cout << "Enter your option (1 to 4): ";
+        
 
         while (true) {
+            cout << "Enter your option (1 to 4): ";
             cin >> choice;
             if (cin.fail() || choice < 1 || choice > 4) {
                 cout << RED "Invalid option! Please try again.\n" RESET;
-                cout << "Enter your option (1 to 4): ";
-                cin >> choice;
                 cin.clear();
                 cin.ignore(numeric_limits<streamsize>::max(), '\n');
             }
@@ -221,14 +220,13 @@ void customerStartMenu(Service services[], Rental rentals[], Booking bookings[],
         cout << "|                             2: Register                                      |\n";
         cout << "|                             3: Back to Main Menu                             |\n" RESET;
         cout << "--------------------------------------------------------------------------------\n";
-        cout << "Enter your option (1 to 3): ";
+ 
         while (true) {
+            cout << "Enter your option (1 to 3): ";
             cin >> custMenuChoice;
 
             if (cin.fail() || custMenuChoice < 1 || custMenuChoice > 3) {
                 cout << RED "Invalid option! Please try again.\n" RESET;
-                cout << "Enter your option (1 to 3): ";
-                cin >> custMenuChoice;
                 cin.clear();
                 cin.ignore(numeric_limits<streamsize>::max(), '\n');
             }
@@ -256,7 +254,7 @@ void customerStartMenu(Service services[], Rental rentals[], Booking bookings[],
 }
 void customerLogin(Service services[], Rental rentals[], Booking bookings[], int& bookingCount, int rentalsindex, int serviceChoice) {
     int count = 0;
-    string username, password, usernameInput, passwordInput;
+    string username, password, usernameInput, passwordInput,choice;
 
     system("cls");
     cout << CYAN "*******************************************************************************" << endl;
@@ -264,7 +262,14 @@ void customerLogin(Service services[], Rental rentals[], Booking bookings[], int
     cout << "*******************************************************************************" RESET "\n" << endl;
 
     cout << YELLOW "You are now in Customer Login Menu! " << endl;
-    cout << "Please enter your login details to proceed!\n" RESET << endl;
+    cout << YELLOW << "Press B to go back or Press Other Key to continue:" << RESET;
+    cin.ignore();
+    getline(cin, choice);
+
+    if (choice == "b" || choice == "B") {
+        customerStartMenu(services, rentals, bookings, bookingCount, rentalsindex, serviceChoice);
+        return; // Ensure function exits after going back
+    }
 
     cout << "Enter your username: ";
     cin >> usernameInput;
@@ -298,7 +303,7 @@ void customerLogin(Service services[], Rental rentals[], Booking bookings[], int
 }
 
 void customerRegister(Service services[], Rental rentals[], Booking bookings[], int& bookingCount, int rentalsindex, int serviceChoice) {
-    string registeredUser, registeredPass;
+    string registeredUser, registeredPass,choice;
 
     system("cls");
     cout << CYAN "*******************************************************************************" << endl;
@@ -306,7 +311,14 @@ void customerRegister(Service services[], Rental rentals[], Booking bookings[], 
     cout << "*******************************************************************************" RESET "\n" << endl;
 
     cout << YELLOW "Please register to enjoy more benefits from our application!\n" RESET << endl;
+    cout << YELLOW << "Press B to go back or Press Other Key to continue:" << RESET;
+    cin.ignore();
+    getline(cin, choice);
 
+    if (choice == "b" || choice == "B") {
+        customerStartMenu(services, rentals, bookings, bookingCount, rentalsindex, serviceChoice);
+        return; // Ensure function exits after going back
+    }
     cout << "Enter the username: ";
     cin >> registeredUser;
     cout << "Enter the password: ";
@@ -384,14 +396,13 @@ void custMenu(Service services[], Rental rentals[], Booking bookings[], int& boo
         cout << "|  " << GREEN "4: Delete Booking" << RESET "                                                           |" << endl;
         cout << "|  " << RED "5: Logout" << RESET "                                                                   |" << endl;
         cout << "--------------------------------------------------------------------------------" << endl;
-        cout << "Enter your choice (1 to 5): ";
+    
         while (true) {
+            cout << "Enter your choice (1 to 5): ";
             cin >> customerChoice;
 
             if (cin.fail() || customerChoice < 1 || customerChoice > 6) {
                 cout << RED "Invalid choice! Please try again!" RESET << endl;
-                cout << "Enter your choice (1 to 5): ";
-                cin >> customerChoice;
                 cin.clear();
                 cin.ignore(numeric_limits<streamsize>::max(), '\n');
             }
@@ -404,7 +415,7 @@ void custMenu(Service services[], Rental rentals[], Booking bookings[], int& boo
             showPropertyRentalMenu(services, rentals, bookings, bookingCount, rentalsindex, serviceChoice);
             break;
         case 2:
-            bookAppointment(services, rentals, bookings, bookingCount, rentalsindex);
+            bookAppointment(services, rentals, bookings, bookingCount, rentalsindex,serviceChoice);
             break;
         case 3:
             searchBookings(services, rentals, bookings, bookingCount);
@@ -655,9 +666,11 @@ void staffLogin(Service services[], Rental rentals[], Booking bookings[], int bo
     string adminpassword = "pass123";
     string adminusernameInput = " ";
     string adminpasswordInput = " ";
+    string choice;
 
     cout << YELLOW << "You are now in admin mode!\n " << RESET;
-    cout << YELLOW << "\nPress B to go back or Press C to continue.\n" << RESET;
+    cout << YELLOW << "Press B to go back or Press Other Key to continue:" << RESET;
+    cin.ignore();
     getline(cin, choice);
 
     if (choice == "b" || choice == "B") {
@@ -665,13 +678,10 @@ void staffLogin(Service services[], Rental rentals[], Booking bookings[], int bo
         return; // Ensure function exits after going back
     }
 
-    if (choice != "c" && choice != "C") {
-        cout << RED << "Invalid input! Please press C to continue.\n" << RESET;
-        return;
-    }
+ 
     while (true) {
         cout << "Enter Admin Username: ";
-        cin >> adminusernameInput;
+        getline(cin, adminusernameInput);
         if (adminusernameInput != adminusername) {
             cout << RED << "Invalid username, please try again!\n" << RESET << endl;
         }
@@ -828,7 +838,7 @@ void salesReport(Service services[], Rental rentals[], Booking bookings[], int b
     adminMenu(services, rentals, bookings, bookingCount, rentalsindex, serviceChoice);
 }
 
-void bookAppointment(Service services[], Rental rentals[], Booking bookings[], int& bookingCount, int rentalsindex) {
+void bookAppointment(Service services[], Rental rentals[], Booking bookings[], int& bookingCount, int rentalsindex,int servicechoice) {
     system("cls");  // Clear previous content
     cout << CYAN << "*******************************************************************************" << RESET << endl;
     cout << BLUE << "                                PrimeStay Properties                           " << RESET << endl;
@@ -838,11 +848,18 @@ void bookAppointment(Service services[], Rental rentals[], Booking bookings[], i
         cout << RED << "All bookings are full. Please try again later.\n" << RESET;
         return;
     }
+    string choice;
+    cout << YELLOW << "Press B to go back or Press Other Key to continue:" << RESET;
+    cin.ignore();
+    getline(cin, choice);
 
+    if (choice == "b" || choice == "B") {
+        custMenu(services, rentals, bookings, bookingCount, rentalsindex, servicechoice);
+        return; // Ensure function exits after going back
+    }
 
     Booking newBooking;
     newBooking.bookingID = generateBookingID();
-    cin.get();
     cout << GREEN << "Please Enter Your Name: " << RESET;
     cin.ignore();
     getValidName(newBooking.customerName);
