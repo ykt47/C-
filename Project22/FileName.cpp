@@ -898,7 +898,7 @@ void bookAppointment(Service services[], Rental rentals[], Booking bookings[], i
     cout << BLUE << "                             PrimeStay Properties                              " << RESET << endl;
     cout << CYAN << "*******************************************************************************\n" << RESET;
     
-     cout << YELLOW << "Press B to go back or Press Other Key to continue:" << RESET;
+ cout << YELLOW << "Press B to go back or Press Other Key to continue:" << RESET;
  cin.ignore();
  getline(cin, choice);
 
@@ -1116,6 +1116,15 @@ void deleteAppointment(Booking bookings[], int& bookingCount, Rental rentals[], 
     cout << CYAN << "                                     PrimeStay Properties                      " << RESET << endl;
     cout << CYAN << "*******************************************************************************\n" << RESET << endl;
 
+    string choice;
+    cout << YELLOW << "Press B to go back or Press Other Key to continue:" << RESET;
+    cin.ignore();
+    getline(cin, choice);
+
+    if (choice == "b" || choice == "B") {
+        custMenu(services, rentals, bookings, bookingCount, rentalsindex, serviceChoice);
+        return; // Ensure function exits after going back
+    }
     if (bookingCount == 0) {
         cout << RED << "No bookings to delete.\n" << RESET;
         cin.ignore();
