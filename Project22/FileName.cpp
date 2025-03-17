@@ -897,7 +897,15 @@ void bookAppointment(Service services[], Rental rentals[], Booking bookings[], i
     cout << CYAN << "*******************************************************************************" << RESET << endl;
     cout << BLUE << "                             PrimeStay Properties                              " << RESET << endl;
     cout << CYAN << "*******************************************************************************\n" << RESET;
+    
+     cout << YELLOW << "Press B to go back or Press Other Key to continue:" << RESET;
+ cin.ignore();
+ getline(cin, choice);
 
+ if (choice == "b" || choice == "B") {
+     custMenu(services, rentals, bookings, bookingCount, rentalsindex, servicechoice);
+     return; // Ensure function exits after going back
+ }
     // Show Calendar for the selected property
     displayCalendar(rentals, services, bookings, serviceChoice - 1, rentalsindex);
 
