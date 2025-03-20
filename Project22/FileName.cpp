@@ -17,9 +17,16 @@ using namespace std;
 #define RED     "\033[1;31m"
 #define BLUE    "\033[1;34m"
 
+struct Unit {
+    string unitName;
+    double price;
+    bool bookedDates[31] = { false }; // Each unit has its own schedule
+};
+
 struct Service {
     string propertyName;
     double price;
+    Unit units[2];
 };
 
 struct Rental {
@@ -32,7 +39,7 @@ struct Rental {
 struct Booking {
     string bookingID;
     string customerName;
-    string propertyType;
+    string unitName;
     string propertyName;
     int checkInDate;
     int nights;
@@ -88,7 +95,7 @@ void showBungalowPage(Service services[], Rental rentals[], Booking bookings[], 
 void showHousePage(Service services[], Rental rentals[], Booking bookings[], int& bookingCount, int rentalsindex, int serviceChoice);
 void askForHouse(const string& service, const string& rental, const string& experience, const string& achievements, Service services[], Rental rentals[], Booking bookings[], int& bookingCount, int rentalsindex, int serviceChoice);
 
-void displayCalendar(Rental rentals[], Service services[], Booking bookings[], int serviceChoice, int rentalsindex);
+void displayCalendar(Rental rentals[], Service services[], int serviceChoice, int unitChoice);
 void initializeData(Service services[]);
 void staffLogin(Service services[], Rental rentals[], Booking bookings[], int bookingCount, int rentalsindex, int serviceChoice);
 void staffAccountSelection(Service services[], Rental rentals[], Booking bookings[], int bookingCount, int rentalsindex, int serviceChoice);
@@ -101,18 +108,27 @@ void searchBookings(Service service[], Rental rentals[], Booking bookings[], int
 void displayData(Booking bookings[], int bookingCount, const string& search);
 void sortBookingsByDate(Booking bookings[], int bookingCount);
 void bookingSummaryPage(const Booking& booking);
-void deleteAppointment(Booking bookings[], int& bookingCount, Rental rentals[], Service services[], int rentalsindex, int serviceChoice);
+void deleteAppointment(Booking bookings[], int& bookingCount, Service services[]);
+void searchAndModifyBooking(Booking bookings[], int bookingCount, Rental rentals[], Service services[], int serviceChoice);
 void getValidName(string& customerName);
 void exitApplication();
 
 void initializeData(Service services[]) {
-    // Initialize Services
+    // Property 1: Skyline Residences (2 Units)
+    services[0].propertyName = "Skyline Residences";
+    services[0].units[0] = { "Unit A (3 Bedroom, 2 Bathroom)", 250.0 };
+    services[0].units[1] = { "Unit B (5 Bedroom, 3 Bathroom)", 450.0 };
 
-    services[0] = { "Skyline Residences(3 Bedroom & 2 Bathroom)", 250.0 };
-    services[1] = { "Evergreen Cottage(8 Bedroom & 6 Bathroom)", 1000.0 };
-    services[2] = { "Amberwood Residences(6 Bedroom & 4 Bathroom) ", 500.0 };
+    // Property 2: Evergreen Cottage (2 Units)
+    services[1].propertyName = "Evergreen Cottage";
+    services[1].units[0] = { "Unit A (8 Bedroom, 6 Bathroom)", 1000.0 };
+    services[1].units[1] = { "Unit B (10 Bedroom, 8 Bathroom)", 1500.0 };
+
+    // Property 3: Amberwood Residences (2 Units)
+    services[2].propertyName = "Amberwood Residences";
+    services[2].units[0] = { "Unit A (6 Bedroom, 4 Bathroom)", 500.0 };
+    services[2].units[1] = { "Unit B (8 Bedroom, 5 Bathroom)", 750.0 };
 }
-
 int main() {
     const int DAYS_IN_MONTH = 30;
     const int MAX_SERVICES = 3;
@@ -394,14 +410,15 @@ void custMenu(Service services[], Rental rentals[], Booking bookings[], int& boo
         cout << "|  " << GREEN "2: Book Property" << RESET "                                                            |" << endl;
         cout << "|  " << GREEN "3: View Booking" << RESET "                                                             |" << endl;
         cout << "|  " << GREEN "4: Delete Booking" << RESET "                                                           |" << endl;
-        cout << "|  " << RED "5: Logout" << RESET "                                                                   |" << endl;
+        cout << "|  " << GREEN "5: Modify Booking" << RESET "                                                           |" << endl;
+        cout << "|  " << RED "6: Logout" << RESET "                                                                   |" << endl;
         cout << "--------------------------------------------------------------------------------" << endl;
 
         while (true) {
-            cout << "Enter your choice (1 to 5): ";
+            cout << "Enter your choice (1 to 6): ";
             cin >> customerChoice;
 
-            if (cin.fail() || customerChoice < 1 || customerChoice > 6) {
+            if (cin.fail() || customerChoice < 1 || customerChoice > 7) {
                 cout << RED "Invalid choice! Please try again!" RESET << endl;
                 cin.clear();
                 cin.ignore(numeric_limits<streamsize>::max(), '\n');
@@ -423,14 +440,17 @@ void custMenu(Service services[], Rental rentals[], Booking bookings[], int& boo
             custMenu(services, rentals, bookings, bookingCount, rentalsindex, serviceChoice);
             break;
         case 4:
-            deleteAppointment(bookings, bookingCount, rentals, services, rentalsindex, serviceChoice);
+            deleteAppointment(bookings, rentalsindex, services);
             break;
         case 5:
+            searchAndModifyBooking(bookings, bookingCount, rentals, services, serviceChoice);
+            break;
+        case 6:
             startMenu(services, rentals, bookings, bookingCount, rentalsindex, serviceChoice);
             break;
 
         }
-    } while (customerChoice != 4);
+    } while (customerChoice != 6);
 }
 
 void showPropertyRentalMenu(Service services[], Rental rentals[], Booking bookings[], int& bookingCount, int rentalsindex, int serviceChoice) {
@@ -586,12 +606,18 @@ string generateBookingID() {
 
 
 
-void displayCalendar(Rental rentals[], Service services[], Booking bookings[], int serviceChoice, int rentalsindex) {
+void displayCalendar(Rental rentals[], Service services[], int serviceChoice, int unitChoice) {
     system("cls");
 
-    cout << "\n\033[1;36mAvailability Calendar for " << services[serviceChoice].propertyName << " - May 2024:\033[0m\n";
+    cout << CYAN << "*******************************************************************************" << RESET << endl;
+    cout << BLUE << "                           Availability Calendar - May 2024                    " << RESET << endl;
+    cout << CYAN << "*******************************************************************************\n" << RESET;
+
+    cout << GREEN << "Property: " << RESET << services[serviceChoice].propertyName << "  ";
+    cout << GREEN << "Unit: " << RESET << services[serviceChoice].units[unitChoice].unitName << endl;
+
     cout << "-----------------------------------------------------------\n";
-    cout << "\033[1;33m Sun   Mon   Tue   Wed   Thu   Fri   Sat \033[0m\n";
+    cout << "\033[1;33m  Sun   Mon   Tue   Wed   Thu   Fri   Sat \033[0m\n";
     cout << "-----------------------------------------------------------\n";
 
     int firstDayOffset = 2; // May 1, 2024, starts on Wednesday
@@ -601,24 +627,25 @@ void displayCalendar(Rental rentals[], Service services[], Booking bookings[], i
         cout << "      ";
     }
 
-    // Print calendar days
-    for (int day = 1; day <= 30; day++) {
-        if (rentals[serviceChoice].bookedDates[day - 1]) { // ✅ Correct property and index
-            cout << "\033[1;31m " << setw(2) << day << " X \033[0m"; // Red 'X' for booked days
+    // Print calendar days with colored booking status
+    for (int day = 1; day <= 31; day++) {
+        if (services[serviceChoice].units[unitChoice].bookedDates[day - 1]) {
+            cout << "\033[1;41m " << setw(2) << day << " X \033[0m";  // 🔴 Booked (Red Background)
         }
         else {
-            cout << "\033[1;32m " << setw(2) << day << " O \033[0m"; // Green 'O' for available days
+            cout << "\033[1;42m " << setw(2) << day << " O \033[0m";  // 🟢 Available (Green Background)
         }
 
-        // Break line after every Saturday (7-day week)
-        if ((day + firstDayOffset) % 7 == 0 || day == 30) {
+        // Newline after every Saturday (7-day week)
+        if ((day + firstDayOffset) % 7 == 0 || day == 31) {
             cout << endl;
         }
     }
 
     cout << "-----------------------------------------------------------\n";
-    cout << GREEN << "Available = O " << RED << " Unavailable = X" << endl;
+    cout << GREEN << "Available = \033[1;42m O \033[0m   " << RED << " Unavailable = \033[1;41m X \033[0m" << endl;
 }
+
 void staffAccountSelection(Service services[], Rental rentals[], Booking bookings[], int bookingCount, int rentalsindex, int serviceChoice) {
     int staffStartChoice = 0;
     do {
@@ -778,13 +805,9 @@ void readCustomerDetails(Service services[], Rental rentals[], Booking bookings[
     adminMenu(services, rentals, bookings, bookingCount, rentalsindex, serviceChoice);
 }
 void salesReport(Service services[], Rental rentals[], Booking bookings[], int bookingCount, int rentalsindex, int serviceChoice) {
-    int num_condo = 0;
-    int num_bung = 0;
-    int num_house = 0;
     double totalRevenue = 0.0;
-
     // Track the number of bookings per expert
-    int rentalBookings[3] = { 0, 0, 0 };
+    int rentalBookings[3][2] = { {0, 0}, {0, 0}, {0, 0} };
 
     system("cls");
     cout << CYAN << "*******************************************************************************" << RESET << endl;
@@ -793,7 +816,8 @@ void salesReport(Service services[], Rental rentals[], Booking bookings[], int b
     cout << GREEN << "\nSales Report\n" << RESET;
     cout << "-------------------------------------------------------------------------------------------------------------------\n";
     cout << YELLOW << left << setw(20) << "Customer Name"
-        << setw(40) << "Property Name"
+        << setw(35) << "Property Name"
+        << setw(20) << "Unit Name"
         << setw(15) << "Check-In Date"
         << setw(15) << "Stay duration"
         << setw(10) << "Currency"
@@ -803,34 +827,24 @@ void salesReport(Service services[], Rental rentals[], Booking bookings[], int b
     cout << "-------------------------------------------------------------------------------------------------------------------\n";
 
 
+    int totalBookings = 0;
+
     for (int i = 0; i < bookingCount; i++) {
-        // Count the number of bookings per property
-        if (bookings[i].propertyName == "Skyline Residences") {
-            rentalBookings[0]++;
-        }
-        else if (bookings[i].propertyName == "Evergreen Cottage") {
-            rentalBookings[1]++;
-        }
-        else if (bookings[i].propertyName == "Amberwood Residences") {
-            rentalBookings[2]++;
-        }
-
-        // Calculate total revenue
-        totalRevenue += bookings[i].price;
-
         cout << left << setw(20) << bookings[i].customerName
-            << setw(40) << bookings[i].propertyName
+            << setw(30) << bookings[i].propertyName
+            << setw(20) << bookings[i].unitName
             << setw(15) << bookings[i].checkInDate
             << setw(15) << bookings[i].nights
-            << setw(10) << "RM"
             << setw(10) << fixed << setprecision(2) << bookings[i].price << "\n";
+
+        totalRevenue += bookings[i].price;
+        totalBookings++;
     }
+
     cout << "-------------------------------------------------------------------------------------------------------------------\n";
-
-
-    // Display total revenue
-    cout << GREEN << "\nTotal Revenue: RM " << fixed << setprecision(2) << totalRevenue << RESET << "\n";
-
+    cout << GREEN << "Total Bookings: " << totalBookings << "\n" << RESET;
+    cout << GREEN << "Total Revenue: RM " << fixed << setprecision(2) << totalRevenue << "\n" << RESET;
+    cout << "------------------------------------------------------------------------------------------------------------\n";
     // Wait for admin input
     cout << RED << "\nPress Enter to continue..." << RESET;
     cin.ignore();
@@ -870,9 +884,9 @@ void bookAppointment(Service services[], Rental rentals[], Booking bookings[], i
     cout << CYAN << "*******************************************************************************\n" << RESET;
 
     // Choose Property
-    cout << GREEN << "Available Properties  :\n" << RESET;
-    for (int serviceIndex = 0; serviceIndex < 3; serviceIndex++) {
-        cout << YELLOW << serviceIndex + 1 << ". " << services[serviceIndex].propertyName << " - RM " << services[serviceIndex].price << RESET << "\n";
+    cout << GREEN << "Available Properties:\n" << RESET;
+    for (int i = 0; i < 3; i++) {
+        cout << YELLOW << i + 1 << ". " << services[i].propertyName << RESET << "\n";
     }
 
     int serviceChoice;
@@ -880,8 +894,8 @@ void bookAppointment(Service services[], Rental rentals[], Booking bookings[], i
         cout << GREEN << "Select a property (1-3): " << RESET;
         cin >> serviceChoice;
 
-        if (cin.fail() || serviceChoice < 1 || serviceChoice > 3) {
-            cout << RED << "Invalid property selection.\n" << RESET;
+        if (serviceChoice < 1 || serviceChoice > 3) {
+            cout << RED << "Invalid selection.\n" << RESET;
             cin.clear();
             cin.ignore(numeric_limits<streamsize>::max(), '\n');
         }
@@ -889,34 +903,27 @@ void bookAppointment(Service services[], Rental rentals[], Booking bookings[], i
             break;
         }
     }
-
-    newBooking.propertyName = services[serviceChoice - 1].propertyName;
+    serviceChoice--;
 
     system("cls");
-
     cout << CYAN << "*******************************************************************************" << RESET << endl;
-    cout << BLUE << "                             PrimeStay Properties                              " << RESET << endl;
+    cout << BLUE << "                               PrimeStay Properties                            " << RESET << endl;
     cout << CYAN << "*******************************************************************************\n" << RESET;
-    
- cout << YELLOW << "Press B to go back or Press Other Key to continue:" << RESET;
- cin.ignore();
- getline(cin, choice);
 
- if (choice == "b" || choice == "B") {
-     custMenu(services, rentals, bookings, bookingCount, rentalsindex, servicechoice);
-     return; // Ensure function exits after going back
- }
-    // Show Calendar for the selected property
-    displayCalendar(rentals, services, bookings, serviceChoice - 1, rentalsindex);
+    // Display Units
+    cout << GREEN << "Available Units for " << services[serviceChoice].propertyName << ":\n" << RESET;
+    for (int i = 0; i < 2; i++) {
+        cout << YELLOW << i + 1 << ". " << services[serviceChoice].units[i].unitName
+            << " - RM " << services[serviceChoice].units[i].price << RESET << "\n";
+    }
 
-
-    // Select Check-In Date
-    int checkInDay, checkoutDate, nights;
+    int unitChoice;
     while (true) {
-        cout << GREEN << "\nEnter Check-In Day (1-31): " << RESET;
-        cin >> checkInDay;
-        if (checkInDay < 1 || checkInDay > 31) {
-            cout << RED << "Invalid day selection.\n" << RESET;
+        cout << GREEN << "Select a unit (1-2): " << RESET;
+        cin >> unitChoice;
+
+        if (unitChoice < 1 || unitChoice > 2) {
+            cout << RED << "Invalid selection.\n" << RESET;
             cin.clear();
             cin.ignore(numeric_limits<streamsize>::max(), '\n');
         }
@@ -924,55 +931,90 @@ void bookAppointment(Service services[], Rental rentals[], Booking bookings[], i
             break;
         }
     }
+    unitChoice--;
+    system("cls");
+    cout << CYAN << "*******************************************************************************" << RESET << endl;
+    cout << BLUE << "                               PrimeStay Properties                            " << RESET << endl;
+    cout << CYAN << "*******************************************************************************\n" << RESET;
+    // Display Calendar
+    displayCalendar(rentals, services, serviceChoice, unitChoice);
+
+    int checkInDay, checkoutDate;
     while (true) {
+        cout << GREEN << "Enter Check-In Day (1-31): " << RESET;
+        cin >> checkInDay;
+
         cout << GREEN << "Enter Check Out Date (1-31): " << RESET;
         cin >> checkoutDate;
-        if (checkoutDate - checkInDay > 30 || checkoutDate - checkInDay < 0) {
-            cout << RED << "Invalid booking , exceeds calendar days.\n" << RESET;
+
+        if (checkInDay < 1 || checkoutDate > 31 || checkoutDate <= checkInDay) {
+            cout << RED << "Invalid booking dates.\n" << RESET;
             cin.clear();
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');;
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
         }
         else {
             break;
         }
-    }
-    nights = checkoutDate - checkInDay;
-    if (nights > 30) {
-        cout << "Invalid booking, exceeds calendar days.\n";
-        return;
     }
 
     // Check availability
     bool available = true;
     for (int i = checkInDay - 1; i < checkoutDate; i++) {
-        if (rentals[serviceChoice - 1].bookedDates[i]) {
+        if (services[serviceChoice].units[unitChoice].bookedDates[i]) {
             available = false;
             break;
         }
     }
 
     if (!available) {
-        cout << "\nBooking Failed: Selected dates are unavailable!\n";
-        cout << "Please select another check-in day and number of nights.\n";
+        cout << RED << "\nBooking Failed: Selected dates are unavailable!\n" << RESET;
         return;
     }
 
     // Confirm Check-In and Book Dates
     for (int i = checkInDay - 1; i < checkoutDate; i++) {
-        rentals[serviceChoice - 1].bookedDates[i] = true;
+        services[serviceChoice].units[unitChoice].bookedDates[i] = true;
     }
 
-
-
     // Save booking
-    newBooking.checkInDate = 20250500 + checkInDay;
-    newBooking.checkoutDate = 2020500 + checkoutDate;
+    newBooking.propertyName = services[serviceChoice].propertyName;
+    newBooking.unitName = services[serviceChoice].units[unitChoice].unitName;
     newBooking.nights = checkoutDate - checkInDay;
-    newBooking.price = services[serviceChoice - 1].price * nights;
+    newBooking.checkInDate = 20250500 + checkInDay;
+    newBooking.checkoutDate = 20250500 + checkoutDate;
+    newBooking.price = services[serviceChoice].units[unitChoice].price * newBooking.nights;
+
+    system("cls");
+
+    cout << CYAN << "*******************************************************************************" << RESET << endl;
+    cout << BLUE << "                             PrimeStay Properties                              " << RESET << endl;
+    cout << CYAN << "*******************************************************************************\n" << RESET;
+    cout << YELLOW << "Please press Enter to proceed to continue." << RESET;
+    cin.ignore();
+    cin.get();
+    double originalPrice = services[serviceChoice].units[unitChoice].price * newBooking.nights;
+    double discount = 0.0;
+
+    if (newBooking.nights >= 30) {
+        discount = 0.25;
+    }
+    else if (newBooking.nights >= 20) {
+        discount = 0.20;
+    }
+    else if (newBooking.nights >= 10) {
+        discount = 0.10;
+    }
+
+    newBooking.price = originalPrice * (1 - discount);
+
+    cout << GREEN << "Booking Successful!\n" << RESET;
+    cout << YELLOW << "Total Nights: " << newBooking.nights << RESET << "\n";
+    cout << YELLOW << "Original Price: RM " << fixed << setprecision(2) << originalPrice << RESET << "\n";
+    cout << YELLOW << "Discount Applied: " << (discount * 100) << "%" << RESET << "\n";
+    cout << YELLOW << "Final Price: RM " << fixed << setprecision(2) << newBooking.price << RESET << "\n";
+
     bookings[bookingCount++] = newBooking;
 
-
-    cout << GREEN << "\nBooking Successful! Check-Out will be on Day " << (checkInDay + nights) << " (Maintenance follows after checkout)\n" << RESET;
     cin.ignore();
     system("cls");
 
@@ -1006,6 +1048,7 @@ void paymentPage(Service services[], Rental rentals[], Booking& booking, Booking
 
     cout << GREEN << "Proceeding to Payment\n" << RESET;
     cout << YELLOW << "Your Booking Rental:" << booking.propertyName << RESET << "\n";
+    cout << YELLOW << "Your Booking Unit:" << booking.unitName << RESET << "\n";
     cout << YELLOW << "Your Check in Date:" << booking.checkInDate << RESET << "\n";
     cout << YELLOW << "Your Staying Period(nights):" << booking.nights << RESET << "\n";
     cout << YELLOW << "Booking Price: RM " << fixed << setprecision(2) << booking.price << RESET << "\n";
@@ -1059,6 +1102,7 @@ void bookingSummaryPage(const Booking& booking) {
     cout << YELLOW"Booking ID: " << booking.bookingID << "\n";
     cout << YELLOW"Customer Name: " << booking.customerName << "\n";
     cout << YELLOW"Property Name: " << booking.propertyName << "\n";
+    cout << YELLOW"Unit Name: " << booking.unitName << "\n";
     cout << YELLOW"Check In Date: " << booking.checkInDate << "\n";
     cout << YELLOW"Total nights:" << booking.nights << "\n";
     cout << YELLOW"Total Price: $" << booking.price << "\n";
@@ -1096,6 +1140,7 @@ void displayData(Booking bookings[], int bookingCount, const string& search) {
             cout << GREEN "Name           : " RESET << bookings[i].customerName << endl;
             cout << BLUE "Price          : " RESET << bookings[i].price << endl;
             cout << GREEN "Property Name  : " RESET << bookings[i].propertyName << endl;
+            cout << GREEN "Unit Name      : " RESET << bookings[i].unitName << endl;
             cout << YELLOW "Check-in Date  : " RESET << bookings[i].checkInDate << endl;
             cout << GREEN "Total Nights   : " RESET << bookings[i].nights << endl;
             cout << CYAN "------------------------------------------------\n" RESET;
@@ -1110,26 +1155,16 @@ void displayData(Booking bookings[], int bookingCount, const string& search) {
 
 
 
-void deleteAppointment(Booking bookings[], int& bookingCount, Rental rentals[], Service services[], int rentalsindex, int serviceChoice) {
+void deleteAppointment(Booking bookings[], int& bookingCount, Service services[]) {
     system("cls");
     cout << CYAN << "*******************************************************************************" << RESET << endl;
     cout << CYAN << "                                     PrimeStay Properties                      " << RESET << endl;
     cout << CYAN << "*******************************************************************************\n" << RESET << endl;
 
-    string choice;
-    cout << YELLOW << "Press B to go back or Press Other Key to continue:" << RESET;
-    cin.ignore();
-    getline(cin, choice);
-
-    if (choice == "b" || choice == "B") {
-        custMenu(services, rentals, bookings, bookingCount, rentalsindex, serviceChoice);
-        return; // Ensure function exits after going back
-    }
     if (bookingCount == 0) {
         cout << RED << "No bookings to delete.\n" << RESET;
         cin.ignore();
         cin.get();
-        custMenu(services, rentals, bookings, bookingCount, rentalsindex, serviceChoice);
         return;
     }
 
@@ -1151,30 +1186,36 @@ void deleteAppointment(Booking bookings[], int& bookingCount, Rental rentals[], 
         cout << RED << "Press Enter to go back.\n" << RESET;
         cin.ignore();
         cin.get();
-        custMenu(services, rentals, bookings, bookingCount, rentalsindex, serviceChoice);
         return;
     }
 
-    // Find which rental property was booked
-    int rentalIndex = -1;
+    // Find the correct property and unit
+    int propertyIndex = -1, unitIndex = -1;
     for (int i = 0; i < 3; i++) {  // Assuming 3 properties
         if (services[i].propertyName == bookings[bookingIndex].propertyName) {
-            rentalIndex = i;
+            propertyIndex = i;
+            for (int j = 0; j < 2; j++) { // Each property has 2 units
+                if (services[i].units[j].unitName == bookings[bookingIndex].unitName) {
+                    unitIndex = j;
+                    break;
+                }
+            }
             break;
         }
     }
 
-    if (rentalIndex == -1) {
-        cout << RED << "Error: Rental property not found.\n" << RESET;
+    if (propertyIndex == -1 || unitIndex == -1) {
+        cout << RED << "Error: Rental property or unit not found.\n" << RESET;
         return;
     }
 
+    // Extract check-in and check-out days correctly
+    int checkInDay = bookings[bookingIndex].checkInDate;
+    int checkoutDay = bookings[bookingIndex].checkoutDate;
 
-    int checkInDay = bookings[bookingIndex].checkInDate % 100;
-    int checkoutDay = bookings[bookingIndex].checkoutDate % 100;
-
+    // Unmark the booked dates in the correct unit
     for (int i = checkInDay - 1; i < checkoutDay; i++) {
-        rentals[rentalIndex].bookedDates[i] = false;
+        services[propertyIndex].units[unitIndex].bookedDates[i] = false;
     }
 
     // Shift bookings to remove the deleted booking
@@ -1203,6 +1244,134 @@ void getValidName(string& customerName) {
     }
 }
 
+void searchAndModifyBooking(Booking bookings[], int bookingCount, Rental rentals[], Service services[], int serviceChoice) {
+    system("cls");
+    cout << CYAN << "*******************************************************************************" << RESET << endl;
+    cout << BLUE << "                                PrimeStay Properties                           " << RESET << endl;
+    cout << CYAN << "*******************************************************************************\n" << RESET << endl;
+
+    string choose;
+    cout << YELLOW << "Press B to go back or Press Other Key to continue:" << RESET;
+    cin.ignore();
+    getline(cin, choose);
+
+    if (choose == "b" || choose == "B") {
+        return; // Ensure function exits after going back
+    }
+    string bookingID;
+    cout << GREEN << "Enter Booking ID to search: " << RESET;
+    cin >> bookingID;
+
+    int bookingIndex = -1;
+    for (int i = 0; i < bookingCount; i++) {
+        if (bookings[i].bookingID == bookingID) {
+            bookingIndex = i;
+            break;
+        }
+    }
+    if (bookingIndex == -1) {
+        cout << RED << "Booking not found!\n" << RESET;
+        return;
+    }
+
+    Booking& booking = bookings[bookingIndex];
+    cout << YELLOW << "Booking Details:\n" << RESET;
+    cout << "Property: " << booking.propertyName << "\n";
+    cout << "Unit: " << booking.unitName << "\n";
+    cout << "Check-in Date: " << booking.checkInDate << "\n";
+    cout << "Nights: " << booking.nights << "\n";
+    cout << "Total Price: RM " << fixed << setprecision(2) << booking.price << "\n";
+
+    char choice;
+    cout << GREEN << "Do you want to modify the check-in date? (y/n): " << RESET;
+    cin >> choice;
+    if (tolower(choice) != 'y') return;
+
+    int newCheckInDate, newCheckoutDate;
+    while (true) {
+        cout << GREEN << "Enter new Check-In Day (1-31): " << RESET;
+        cin >> newCheckInDate;
+
+        cout << GREEN << "Enter new Check-Out Date (1-31): " << RESET;
+        cin >> newCheckoutDate;
+
+        if (newCheckInDate < 1 || newCheckoutDate > 31 || newCheckoutDate <= newCheckInDate) {
+            cout << RED << "Invalid dates. Please enter valid check-in and check-out dates.\n" << RESET;
+        }
+        else {
+            break;
+        }
+    }
+
+    // Find the correct property and unit
+    int propertyIndex = -1, unitIndex = -1;
+    for (int i = 0; i < 3; i++) {
+        if (services[i].propertyName == booking.propertyName) {
+            propertyIndex = i;
+            for (int j = 0; j < 2; j++) {
+                if (services[i].units[j].unitName == booking.unitName) {
+                    unitIndex = j;
+                    break;
+                }
+            }
+            break;
+        }
+    }
+
+    if (propertyIndex == -1 || unitIndex == -1) {
+        cout << RED << "Error: Property or Unit not found.\n" << RESET;
+        return;
+    }
+
+    // Free old booking dates
+    for (int i = booking.checkInDate % 100 - 1; i < booking.checkoutDate % 100; i++) {
+        services[propertyIndex].units[unitIndex].bookedDates[i] = false;
+    }
+
+    // Check new date availability
+    bool available = true;
+    for (int i = newCheckInDate - 1; i < newCheckoutDate; i++) {
+        if (services[propertyIndex].units[unitIndex].bookedDates[i]) {
+            available = false;
+            break;
+        }
+    }
+
+    if (!available) {
+        cout << RED << "New dates are unavailable!\n" << RESET;
+        return;
+    }
+
+    // Apply new booking dates
+    for (int i = newCheckInDate - 1; i < newCheckoutDate; i++) {
+        services[propertyIndex].units[unitIndex].bookedDates[i] = true;
+    }
+    //calculate update price
+    booking.nights = newCheckoutDate - newCheckInDate;
+    double originalPrice = services[propertyIndex].units[unitIndex].price * booking.nights;
+    double discount = 0.0;
+
+    if (booking.nights >= 30) {
+        discount = 0.25;  // 25% discount
+    }
+    else if (booking.nights >= 20) {
+        discount = 0.20;  // 20% discount
+    }
+    else if (booking.nights >= 10) {
+        discount = 0.10;  // 10% discount
+    }
+    // Update booking details
+    booking.checkInDate = 20250500 + newCheckInDate;
+    booking.checkoutDate = 20250500 + newCheckoutDate;
+    booking.nights = newCheckoutDate - newCheckInDate;
+    booking.price = originalPrice * (1 - discount);
+
+    cout << GREEN << "Booking updated successfully!\n" << RESET;
+    cout << YELLOW << "New Total Nights: " << booking.nights << RESET << "\n";
+    cout << YELLOW << "Original Price: RM " << fixed << setprecision(2) << originalPrice << RESET << "\n";
+    cout << YELLOW << "Discount Applied: " << (discount * 100) << "%" << RESET << "\n";
+    cout << YELLOW << "Final Price: RM " << fixed << setprecision(2) << booking.price << RESET << "\n";
+}
 
 
 void exitApplication() {
