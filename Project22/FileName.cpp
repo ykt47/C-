@@ -132,7 +132,6 @@ void deleteAppointment(Booking bookings[], int& bookingCount, Service services[]
 void searchAndModifyBooking(Booking bookings[], int bookingCount, Rental rentals[], Service services[], int serviceChoice);
 void scheduleMaintenance(Service services[]);
 void viewAndModifyMaintenance(Service services[]);
-void cancelMaintenance(Service services[]);
 void maintenanceMenu(Service services[], Rental rentals[], Booking bookings[], int bookingCount, int rentalsindex, int serviceChoice);
 void getValidName(string& customerName);
 void exitApplication();
