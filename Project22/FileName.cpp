@@ -21,6 +21,7 @@ struct Unit {
     string unitName;
     double price;
     bool bookedDates[31] = { false }; // Each unit has its own schedule
+    bool maintenanceDates[31] = { false };
 };
 
 struct Service {
@@ -110,6 +111,10 @@ void sortBookingsByDate(Booking bookings[], int bookingCount);
 void bookingSummaryPage(const Booking& booking);
 void deleteAppointment(Booking bookings[], int& bookingCount, Service services[]);
 void searchAndModifyBooking(Booking bookings[], int bookingCount, Rental rentals[], Service services[], int serviceChoice);
+void scheduleMaintenance(Service services[]);
+void viewAndModifyMaintenance(Service services[]);
+void cancelMaintenance(Service services[]);
+void maintenanceMenu(Service services[], Rental rentals[], Booking bookings[], int bookingCount, int rentalsindex, int serviceChoice);
 void getValidName(string& customerName);
 void exitApplication();
 
@@ -620,16 +625,19 @@ void displayCalendar(Rental rentals[], Service services[], int serviceChoice, in
     cout << "\033[1;33m  Sun   Mon   Tue   Wed   Thu   Fri   Sat \033[0m\n";
     cout << "-----------------------------------------------------------\n";
 
-    int firstDayOffset = 2; // May 1, 2024, starts on Wednesday
+    int firstDayOffset = 2; // May 1, 2024, starts on Wednesday (Offset for alignment)
 
     // Print leading spaces for the first week
     for (int i = 0; i < firstDayOffset; i++) {
         cout << "      ";
     }
 
-    // Print calendar days with colored booking status
+    // Print calendar days with booking and maintenance status
     for (int day = 1; day <= 31; day++) {
-        if (services[serviceChoice].units[unitChoice].bookedDates[day - 1]) {
+        if (services[serviceChoice].units[unitChoice].maintenanceDates[day - 1]) {
+            cout << "\033[1;44m " << setw(2) << day << " M \033[0m";  // 🔵 Maintenance (Blue Background)
+        }
+        else if (services[serviceChoice].units[unitChoice].bookedDates[day - 1]) {
             cout << "\033[1;41m " << setw(2) << day << " X \033[0m";  // 🔴 Booked (Red Background)
         }
         else {
@@ -642,8 +650,11 @@ void displayCalendar(Rental rentals[], Service services[], int serviceChoice, in
         }
     }
 
+
     cout << "-----------------------------------------------------------\n";
-    cout << GREEN << "Available = \033[1;42m O \033[0m   " << RED << " Unavailable = \033[1;41m X \033[0m" << endl;
+    cout << GREEN << "Available = \033[1;42m O \033[0m   "
+        << RED << " Unavailable = \033[1;41m X \033[0m   "
+        << BLUE << " Maintenance = \033[1;44m M \033[0m" << endl;
 }
 
 void staffAccountSelection(Service services[], Rental rentals[], Booking bookings[], int bookingCount, int rentalsindex, int serviceChoice) {
@@ -742,7 +753,8 @@ void adminMenu(Service services[], Rental rentals[], Booking bookings[], int boo
         cout << "|                             1: View Schedule                                 |" << endl;
         cout << "|                             2: View Customers                                |" << endl;
         cout << "|                             3: View Sales Report                             |" << endl;
-        cout << "|                             4: Logout                                        |" << endl;
+        cout << "|                             4: Maintenance Menu                              |" << endl;
+        cout << "|                             5: Logout                                        |" << endl;
         cout << "--------------------------------------------------------------------------------" << endl;
         while (true) {
             cout << "Enter your choice (1 to 5): ";
@@ -768,7 +780,11 @@ void adminMenu(Service services[], Rental rentals[], Booking bookings[], int boo
         case 3:
             salesReport(services, rentals, bookings, bookingCount, rentalsindex, servicechoice);
             break;
-        case 4: startMenu(services, rentals, bookings, bookingCount, rentalsindex, servicechoice);
+        case 4:
+            maintenanceMenu(services, rentals, bookings, bookingCount, rentalsindex, servicechoice);
+            break;
+        case 5: 
+            startMenu(services, rentals, bookings, bookingCount, rentalsindex, servicechoice);
             break;
 
         default:
@@ -960,14 +976,15 @@ void bookAppointment(Service services[], Rental rentals[], Booking bookings[], i
     // Check availability
     bool available = true;
     for (int i = checkInDay - 1; i < checkoutDate; i++) {
-        if (services[serviceChoice].units[unitChoice].bookedDates[i]) {
+        if (services[serviceChoice].units[unitChoice].bookedDates[i] ||
+            services[serviceChoice].units[unitChoice].maintenanceDates[i]) { // Check maintenance
             available = false;
             break;
         }
     }
 
     if (!available) {
-        cout << RED << "\nBooking Failed: Selected dates are unavailable!\n" << RESET;
+        cout << RED << "\nBooking Failed: Selected dates are unavailable due to a booking or maintenance!\n" << RESET;
         return;
     }
 
@@ -1373,7 +1390,295 @@ void searchAndModifyBooking(Booking bookings[], int bookingCount, Rental rentals
     cout << YELLOW << "Final Price: RM " << fixed << setprecision(2) << booking.price << RESET << "\n";
 }
 
+void scheduleMaintenance(Service services[]) {
+    system("cls");
+    cout << CYAN << "*******************************************************************************" << RESET << endl;
+    cout << BLUE << "                            Schedule Maintenance                              " << RESET << endl;
+    cout << CYAN << "*******************************************************************************\n" << RESET;
 
+    // Select property
+    cout << GREEN << "Available Properties:\n" << RESET;
+    for (int i = 0; i < 3; i++) {
+        cout << YELLOW << i + 1 << ". " << services[i].propertyName << RESET << "\n";
+    }
+
+    int serviceChoice;
+    while (true) {
+        cout << GREEN << "Select a property (1-3): " << RESET;
+        cin >> serviceChoice;
+
+        if (serviceChoice < 1 || serviceChoice > 3) { // Fixed condition
+            cout << RED << "Invalid selection.\n" << RESET;
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        }
+        else {
+            break;
+        }
+    }
+    serviceChoice--;
+    system("cls");
+    cout << CYAN << "*******************************************************************************" << RESET << endl;
+    cout << BLUE << "                            Schedule Maintenance                              " << RESET << endl;
+    cout << CYAN << "*******************************************************************************\n" << RESET;
+    // Select unit
+    cout << GREEN << "Available Units for " << services[serviceChoice].propertyName << ":\n" << RESET;
+    for (int i = 0; i < 2; i++) {
+        cout << YELLOW << i + 1 << ". " << services[serviceChoice].units[i].unitName << RESET << "\n";
+    }
+
+    int unitChoice;
+    while (true) {
+        cout << GREEN << "Select a unit (1-2): " << RESET;
+        cin >> unitChoice;
+
+        if (unitChoice < 1 || unitChoice > 2) {
+            cout << RED << "Invalid selection.\n" << RESET;
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        }
+        else {
+            break;
+        }
+    }
+    unitChoice--;
+    system("cls");
+    cout << CYAN << "*******************************************************************************" << RESET << endl;
+    cout << BLUE << "                            Schedule Maintenance                              " << RESET << endl;
+    cout << CYAN << "*******************************************************************************\n" << RESET;
+    // Enter maintenance dates
+    int startDate, endDate;
+    while (true) {
+        cout << GREEN << "Enter Start Maintenance Date (1-31): " << RESET;
+        cin >> startDate;
+        cout << GREEN << "Enter End Maintenance Date (1-31): " << RESET;
+        cin >> endDate;
+
+        if (startDate < 1 || endDate > 31 || endDate < startDate) {
+            cout << RED << "Invalid dates. Try again.\n" << RESET;
+        }
+        else {
+            break;
+        }
+    }
+
+    // Mark the unit under maintenance and block bookings
+    for (int i = startDate - 1; i < endDate; i++) {
+        services[serviceChoice].units[unitChoice].maintenanceDates[i] = true;
+        services[serviceChoice].units[unitChoice].bookedDates[i] = true;  // Block bookings
+    }
+
+    cout << GREEN << "Maintenance scheduled successfully!\n" << RESET;
+}
+void viewAndModifyMaintenance(Service services[]) {
+    system("cls");
+    cout << CYAN << "*******************************************************************************" << RESET << endl;
+    cout << BLUE << "                          View & Modify Maintenance                           " << RESET << endl;
+    cout << CYAN << "*******************************************************************************\n" << RESET;
+
+    // Display available properties
+    cout << GREEN << "Available Properties:\n" << RESET;
+    for (int i = 0; i < 3; i++) {
+        cout << YELLOW << i + 1 << ". " << services[i].propertyName << RESET << "\n";
+    }
+
+    int serviceChoice;
+    while (true) {
+        cout << GREEN << "Select a property (1-3): " << RESET;
+        cin >> serviceChoice;
+
+        if (serviceChoice < 1 || serviceChoice > 3 || cin.fail()) {
+            cout << RED << "Invalid selection.\n" << RESET;
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        }
+        else {
+            break;
+        }
+    }
+    serviceChoice--;
+
+    // Select unit
+    system("cls");
+    cout << CYAN << "*******************************************************************************" << RESET << endl;
+    cout << BLUE << "                          Schedule/Modify Maintenance                         " << RESET << endl;
+    cout << CYAN << "*******************************************************************************\n" << RESET;
+
+    cout << GREEN << "Available Units for " << services[serviceChoice].propertyName << ":\n" << RESET;
+    for (int i = 0; i < 2; i++) {
+        cout << YELLOW << i + 1 << ". " << services[serviceChoice].units[i].unitName << RESET << "\n";
+    }
+
+    int unitChoice;
+    while (true) {
+        cout << GREEN << "Select a unit (1-2): " << RESET;
+        cin >> unitChoice;
+
+        if (unitChoice < 1 || unitChoice > 2 || cin.fail()) {
+            cout << RED << "Invalid selection.\n" << RESET;
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        }
+        else {
+            break;
+        }
+    }
+    unitChoice--;
+
+    // Display current maintenance dates
+    system("cls");
+    cout << CYAN << "*******************************************************************************" << RESET << endl;
+    cout << BLUE << "                          View & Modify Maintenance                           " << RESET << endl;
+    cout << CYAN << "*******************************************************************************\n" << RESET;
+
+    cout << GREEN << "Scheduled Maintenance Dates:\n" << RESET;
+    bool hasMaintenance = false;
+    for (int i = 0; i < 31; i++) {
+        if (services[serviceChoice].units[unitChoice].maintenanceDates[i]) {
+            cout << YELLOW << "Day " << i + 1 << RESET << " ";
+            hasMaintenance = true;
+        }
+    }
+    if (!hasMaintenance) {
+        cout << RED << "No maintenance scheduled for this unit.\n" << RESET;
+    }
+    cout << "\n\n";
+
+    // Provide options
+    cout << GREEN << "Options:\n" << RESET;
+    cout << YELLOW << "1. Schedule a new maintenance date\n";
+    cout << "2. Cancel a specific maintenance date\n";
+    cout << "3. Clear all maintenance dates\n";
+    cout << "4. Exit\n" << RESET;
+
+    int option;
+    while (true) {
+        cout << GREEN << "Select an option (1-4): " << RESET;
+        cin >> option;
+
+        if (option < 1 || option > 4 || cin.fail()) {
+            cout << RED << "Invalid option. Try again.\n" << RESET;
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        }
+        else {
+            break;
+        }
+    }
+    system("cls");
+    cout << CYAN << "*******************************************************************************" << RESET << endl;
+    cout << BLUE << "                          View & Modify Maintenance                           " << RESET << endl;
+    cout << CYAN << "*******************************************************************************\n" << RESET;
+
+    // Handle options
+    if (option == 1) {
+        // Schedule maintenance
+        int newDay;
+        while (true) {
+            cout << GREEN << "Enter the day to schedule maintenance (1-31): " << RESET;
+            cin >> newDay;
+
+            if (newDay < 1 || newDay > 31 || cin.fail()) {
+                cout << RED << "Invalid day. Try again.\n" << RESET;
+                cin.clear();
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            }
+            else {
+                break;
+            }
+        }
+        services[serviceChoice].units[unitChoice].maintenanceDates[newDay - 1] = true;
+        cout << GREEN << "Maintenance scheduled for Day " << newDay << "!\n" << RESET;
+
+    }
+    else if (option == 2) {
+        // Cancel specific maintenance date
+        int cancelDay;
+        bool validDay = false;
+
+        while (true) {
+            cout << GREEN << "Enter the day to cancel maintenance (1-31): " << RESET;
+            cin >> cancelDay;
+
+            if (cancelDay < 1 || cancelDay > 31 || cin.fail()) {
+                cout << RED << "Invalid day. Try again.\n" << RESET;
+                cin.clear();
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            }
+            else if (!services[serviceChoice].units[unitChoice].maintenanceDates[cancelDay - 1]) {
+                cout << RED << "No maintenance scheduled on this day.\n" << RESET;
+            }
+            else {
+                validDay = true;
+                break;
+            }
+        }
+
+        if (validDay) {
+            services[serviceChoice].units[unitChoice].maintenanceDates[cancelDay - 1] = false;
+            services[serviceChoice].units[unitChoice].bookedDates[cancelDay - 1] = false; // Free for booking
+            cout << GREEN << "Maintenance on Day " << cancelDay << " has been canceled.\n" << RESET;
+        }
+
+    }
+    else if (option == 3) {
+        // Clear all maintenance
+        for (int i = 0; i < 31; i++) {
+            services[serviceChoice].units[unitChoice].maintenanceDates[i] = false;
+            services[serviceChoice].units[unitChoice].bookedDates[i] = false; // Free for booking
+        }
+        cout << GREEN << "All maintenance dates have been cleared!\n" << RESET;
+    }
+
+    cout << GREEN << "\nReturning to menu...\n" << RESET;
+    system("pause");
+}
+
+
+void maintenanceMenu(Service services[],Rental rentals[],Booking bookings[],int bookingCount,int rentalsindex,int serviceChoice) {
+    int adminChoice = 0;
+    do {
+        system("cls");
+        cout << CYAN << "********************************************************************************" << RESET << endl;
+        cout << BLUE << "|                              PrimeStay Properties                            |" << RESET << endl;
+        cout << CYAN << "********************************************************************************" << RESET << endl;
+        cout << GREEN << "| Welcome to Admin Management Console!                                         |" << RESET << endl;
+        cout << "|                                                                              |" << endl;
+        cout << "|                             1: Schedule Maintenance                          |" << endl;
+        cout << "|                             2: View And Modify Maintenance                   |" << endl;
+        cout << "|                             3: Logout                                        |" << endl;
+        cout << "--------------------------------------------------------------------------------" << endl;
+        while (true) {
+            cout << "Enter your choice (1 to 4): ";
+            cin >> adminChoice;
+            if (!cin.fail() && adminChoice >= 1 && adminChoice <= 5) {
+                break;
+            }
+
+            cout << RED << "Invalid option! Please try again.\n" << RESET << endl;
+            cin.clear();  // Clear error flag
+            cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Remove leftover invalid input
+        }
+
+        switch (adminChoice) {
+        case 1:
+            scheduleMaintenance(services);
+            cin.get();
+            adminMenu(services, rentals, bookings, bookingCount, rentalsindex, serviceChoice);
+            break;
+        case 2:
+            viewAndModifyMaintenance(services);
+            cin.get();
+            adminMenu(services, rentals, bookings, bookingCount, rentalsindex, serviceChoice);
+            break;
+        case 3:
+            adminMenu(services, rentals, bookings, bookingCount, rentalsindex, serviceChoice);
+            break;
+        default:
+            break;
+        }
+    } while (adminChoice < 1 || adminChoice > 4);
+}
 void exitApplication() {
     system("cls");
     cout << BLUE << "*******************************************************************************" << endl;
