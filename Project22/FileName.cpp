@@ -7,6 +7,7 @@
 #include <regex>
 #include <cstring>
 #include <sstream>
+#include <conio.h> 
 
 using namespace std;
 
@@ -53,6 +54,25 @@ struct Customer {
     string name;
     int propertyNum;
 };
+
+string getHiddenPassword() {
+    string password;
+    char ch;
+
+    while ((ch = _getch()) != '\r') { // '\r' is Enter key
+        if (ch == '\b') { // Handle backspace
+            if (!password.empty()) {
+                cout << "\b \b"; // Move cursor back, erase '*', move back again
+                password.pop_back();
+            }
+        }
+        else {
+            password.push_back(ch);
+            cout << '*';
+        }
+    }
+    return password;
+}
 
 bool isValidPhoneNumber(const string& phoneNumber) {
     return phoneNumber.length() == 8;
@@ -294,7 +314,7 @@ void customerLogin(Service services[], Rental rentals[], Booking bookings[], int
     cout << "Enter your username: ";
     cin >> usernameInput;
     cout << "Enter your password: ";
-    cin >> passwordInput;
+    passwordInput = getHiddenPassword();
 
     ifstream input("database.txt");
     while (input >> username >> password) {
