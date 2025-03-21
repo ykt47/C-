@@ -58,11 +58,10 @@ bool isValidPhoneNumber(const string& phoneNumber) {
     return phoneNumber.length() == 8;
 };
 
-bool isValidGmail(const string& email) {
-    string domain = "@gmail.com";
-    size_t pos = email.find(domain);
-    return (pos != string::npos && pos == email.length() - domain.length());
+bool isValidEmail(const string& email) {
+    return email.find('@') != string::npos;
 }
+
 bool isValidExpiryDate(const string& expiryDate) {
     if (expiryDate.size() != 5 || expiryDate[2] != '/') {
         return false; // Must be in MM/YY format
@@ -374,10 +373,10 @@ void customerDetailsReg(Service services[], Rental rentals[], Booking bookings[]
     do {
         cout << "Enter your email: ";
         cin >> Useremail;
-        if (!isValidGmail(Useremail)) {
+        if (!isValidEmail(Useremail)) {
             cout << RED "Invalid email. Please try again." RESET << endl;
         }
-    } while (!isValidGmail(Useremail));
+    } while (!isValidEmail(Useremail));
     cout << " " << endl;
 
     do {
@@ -1651,7 +1650,7 @@ void maintenanceMenu(Service services[],Rental rentals[],Booking bookings[],int 
         while (true) {
             cout << "Enter your choice (1 to 4): ";
             cin >> adminChoice;
-            if (!cin.fail() && adminChoice >= 1 && adminChoice <= 5) {
+            if (!cin.fail() && adminChoice >= 1 && adminChoice <= 3) {
                 break;
             }
 
@@ -1674,10 +1673,8 @@ void maintenanceMenu(Service services[],Rental rentals[],Booking bookings[],int 
         case 3:
             adminMenu(services, rentals, bookings, bookingCount, rentalsindex, serviceChoice);
             break;
-        default:
-            break;
         }
-    } while (adminChoice < 1 || adminChoice > 4);
+    } while (adminChoice < 1 || adminChoice > 3);
 }
 void exitApplication() {
     system("cls");
