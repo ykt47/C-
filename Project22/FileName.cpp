@@ -128,7 +128,7 @@ void searchBookings(Service service[], Rental rentals[], Booking bookings[], int
 void displayData(Booking bookings[], int bookingCount, const string& search);
 void sortBookingsByDate(Booking bookings[], int bookingCount);
 void bookingSummaryPage(const Booking& booking);
-void deleteAppointment(Booking bookings[], int& bookingCount, Service services[]);
+void deleteAppointment(Booking bookings[], int& bookingCount, Service service[]);
 void searchAndModifyBooking(Booking bookings[], int bookingCount, Rental rentals[], Service services[], int serviceChoice);
 void scheduleMaintenance(Service services[]);
 void viewAndModifyMaintenance(Service services[]);
@@ -463,7 +463,7 @@ void custMenu(Service services[], Rental rentals[], Booking bookings[], int& boo
             custMenu(services, rentals, bookings, bookingCount, rentalsindex, serviceChoice);
             break;
         case 4:
-            deleteAppointment(bookings, rentalsindex, services);
+            deleteAppointment(bookings, bookingCount, services);
             break;
         case 5:
             searchAndModifyBooking(bookings, bookingCount, rentals, services, serviceChoice);
@@ -801,7 +801,7 @@ void adminMenu(Service services[], Rental rentals[], Booking bookings[], int boo
         case 4:
             maintenanceMenu(services, rentals, bookings, bookingCount, rentalsindex, servicechoice);
             break;
-        case 5: 
+        case 5:
             startMenu(services, rentals, bookings, bookingCount, rentalsindex, servicechoice);
             break;
 
@@ -908,8 +908,7 @@ void bookAppointment(Service services[], Rental rentals[], Booking bookings[], i
 
     Booking newBooking;
     newBooking.bookingID = generateBookingID();
-    cout << GREEN << "Please Enter Your Name: " << RESET;
-    cin.ignore();
+
     getValidName(newBooking.customerName);
 
     system("cls");
@@ -1151,7 +1150,7 @@ void searchBookings(Service service[], Rental rentals[], Booking bookings[], int
     cout << CYAN "*******************************************************************************\n" RESET << endl;
     string search;
     cin.ignore();
-    cout << YELLOW "Enter The Customer Name or the Property Name: " RESET;
+    cout << YELLOW "Enter Booking ID  " RESET;
     cout << "(or leave empty to display all): ";
     getline(cin, search);
     sortBookingsByDate(bookings, bookingCount);
@@ -1168,7 +1167,7 @@ void sortBookingsByDate(Booking bookings[], int bookingCount) {
 void displayData(Booking bookings[], int bookingCount, const string& search) {
     bool found = false;
     for (int i = 0; i < bookingCount; i++) {
-        if (search.empty() || bookings[i].customerName == search) {
+        if (search.empty() || bookings[i].bookingID == search) {
             found = true;
             cout << CYAN "------------------------------------------------\n" RESET;
             cout << YELLOW "Booking Id     : " RESET << bookings[i].bookingID << endl;
@@ -1197,8 +1196,8 @@ void deleteAppointment(Booking bookings[], int& bookingCount, Service services[]
     cout << CYAN << "*******************************************************************************\n" << RESET << endl;
 
     if (bookingCount == 0) {
-        cout << RED << "No bookings to delete.\n" << RESET;
-        cin.ignore();
+        cout << RED << "No bookings available to delete.\n" << RESET;
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
         cin.get();
         return;
     }
@@ -1207,7 +1206,6 @@ void deleteAppointment(Booking bookings[], int& bookingCount, Service services[]
     cout << GREEN << "Enter Booking ID to delete: " << RESET;
     cin >> bookingID;
 
-    // Find the booking by its ID
     int bookingIndex = -1;
     for (int i = 0; i < bookingCount; i++) {
         if (bookings[i].bookingID == bookingID) {
@@ -1218,8 +1216,7 @@ void deleteAppointment(Booking bookings[], int& bookingCount, Service services[]
 
     if (bookingIndex == -1) {
         cout << RED << "Booking ID not found.\n" << RESET;
-        cout << RED << "Press Enter to go back.\n" << RESET;
-        cin.ignore();
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
         cin.get();
         return;
     }
@@ -1244,12 +1241,12 @@ void deleteAppointment(Booking bookings[], int& bookingCount, Service services[]
         return;
     }
 
-    // Extract check-in and check-out days correctly
-    int checkInDay = bookings[bookingIndex].checkInDate;
-    int checkoutDay = bookings[bookingIndex].checkoutDate;
+    // Extract check-in and check-out days
+    int checkInDay = bookings[bookingIndex].checkInDate % 100;
+    int checkoutDay = bookings[bookingIndex].checkoutDate % 100;
 
-    // Unmark the booked dates in the correct unit
-    for (int i = checkInDay - 1; i < checkoutDay; i++) {
+    // ✅ Fix: Ensure we unmark all days correctly, including the checkout date!
+    for (int i = checkInDay - 1; i <= checkoutDay - 1; i++) {
         services[propertyIndex].units[unitIndex].bookedDates[i] = false;
     }
 
@@ -1262,6 +1259,7 @@ void deleteAppointment(Booking bookings[], int& bookingCount, Service services[]
 
     cout << GREEN << "Booking successfully deleted.\n" << RESET;
 }
+
 
 void getValidName(string& customerName) {
     regex alphaRegex("^[A-Za-z ]+$");  // Allows only letters and spaces
@@ -1653,7 +1651,7 @@ void viewAndModifyMaintenance(Service services[]) {
 }
 
 
-void maintenanceMenu(Service services[],Rental rentals[],Booking bookings[],int bookingCount,int rentalsindex,int serviceChoice) {
+void maintenanceMenu(Service services[], Rental rentals[], Booking bookings[], int bookingCount, int rentalsindex, int serviceChoice) {
     int adminChoice = 0;
     do {
         system("cls");
