@@ -23,6 +23,7 @@ struct Unit {
     double price;
     bool bookedDates[31] = { false }; // Each unit has its own schedule
     bool maintenanceDates[31] = { false };
+    string maintenanceReason;
 };
 
 struct Service {
@@ -134,6 +135,7 @@ void scheduleMaintenance(Service services[]);
 void viewAndModifyMaintenance(Service services[]);
 void maintenanceMenu(Service services[], Rental rentals[], Booking bookings[], int bookingCount, int rentalsindex, int serviceChoice);
 void getValidName(string& customerName);
+void summaryMaintenance(Service services[]);
 void exitApplication();
 
 void initializeData(Service services[]) {
@@ -1423,7 +1425,7 @@ void scheduleMaintenance(Service services[]) {
         cout << GREEN << "Select a property (1-3): " << RESET;
         cin >> serviceChoice;
 
-        if (serviceChoice < 1 || serviceChoice > 3) { // Fixed condition
+        if (serviceChoice < 1 || serviceChoice > 3) {
             cout << RED << "Invalid selection.\n" << RESET;
             cin.clear();
             cin.ignore(numeric_limits<streamsize>::max(), '\n');
@@ -1433,10 +1435,12 @@ void scheduleMaintenance(Service services[]) {
         }
     }
     serviceChoice--;
+
     system("cls");
     cout << CYAN << "*******************************************************************************" << RESET << endl;
     cout << BLUE << "                            Schedule Maintenance                              " << RESET << endl;
     cout << CYAN << "*******************************************************************************\n" << RESET;
+
     // Select unit
     cout << GREEN << "Available Units for " << services[serviceChoice].propertyName << ":\n" << RESET;
     for (int i = 0; i < 2; i++) {
@@ -1458,10 +1462,43 @@ void scheduleMaintenance(Service services[]) {
         }
     }
     unitChoice--;
+
     system("cls");
     cout << CYAN << "*******************************************************************************" << RESET << endl;
     cout << BLUE << "                            Schedule Maintenance                              " << RESET << endl;
     cout << CYAN << "*******************************************************************************\n" << RESET;
+
+    // Select maintenance reason
+    cout << GREEN << "Select Maintenance Reason:\n" << RESET;
+    cout << YELLOW << "1. Routine Inspection\n";
+    cout << "2. Emergency Repair\n";
+    cout << "3. Renovation & Upgrades\n" << RESET;
+
+    int reasonChoice;
+    string maintenanceReason;
+    while (true) {
+        cout << GREEN << "Enter your choice (1-3): " << RESET;
+        cin >> reasonChoice;
+
+        if (reasonChoice == 1) {
+            maintenanceReason = "Routine Inspection";
+            break;
+        }
+        else if (reasonChoice == 2) {
+            maintenanceReason = "Emergency Repair";
+            break;
+        }
+        else if (reasonChoice == 3) {
+            maintenanceReason = "Renovation & Upgrades";
+            break;
+        }
+        else {
+            cout << RED << "Invalid selection. Try again.\n" << RESET;
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        }
+    }
+
     // Enter maintenance dates
     int startDate, endDate;
     while (true) {
@@ -1484,7 +1521,10 @@ void scheduleMaintenance(Service services[]) {
         services[serviceChoice].units[unitChoice].bookedDates[i] = true;  // Block bookings
     }
 
-    cout << GREEN << "Maintenance scheduled successfully!\n" << RESET;
+    // Store maintenance reason (assuming Service struct has a reason field)
+    services[serviceChoice].units[unitChoice].maintenanceReason = maintenanceReason;
+
+    cout << GREEN << "Maintenance scheduled successfully for " << maintenanceReason << "!\n" << RESET;
 }
 void viewAndModifyMaintenance(Service services[]) {
     system("cls");
@@ -1662,7 +1702,8 @@ void maintenanceMenu(Service services[], Rental rentals[], Booking bookings[], i
         cout << "|                                                                              |" << endl;
         cout << "|                             1: Schedule Maintenance                          |" << endl;
         cout << "|                             2: View And Modify Maintenance                   |" << endl;
-        cout << "|                             3: Logout                                        |" << endl;
+        cout << "|                             3: Summary of Maintenance                        |" << endl;
+        cout << "|                             4: Logout                                        |" << endl;
         cout << "--------------------------------------------------------------------------------" << endl;
         while (true) {
             cout << "Enter your choice (1 to 4): ";
@@ -1687,11 +1728,60 @@ void maintenanceMenu(Service services[], Rental rentals[], Booking bookings[], i
             cin.get();
             adminMenu(services, rentals, bookings, bookingCount, rentalsindex, serviceChoice);
             break;
+        case 4:
+            adminMenu(services, rentals, bookings, bookingCount, rentalsindex, serviceChoice);
+            break;
         case 3:
+            summaryMaintenance(services);
+            cin.get();
             adminMenu(services, rentals, bookings, bookingCount, rentalsindex, serviceChoice);
             break;
         }
     } while (adminChoice < 1 || adminChoice > 3);
+}
+void summaryMaintenance(Service services[]) {
+    system("cls");
+    cout << CYAN << "*******************************************************************************" << RESET << endl;
+    cout << BLUE << "                            Maintenance Summary                               " << RESET << endl;
+    cout << CYAN << "*******************************************************************************\n" << RESET;
+
+    bool anyMaintenance = false;
+
+    for (int i = 0; i < 3; i++) { // Iterate through properties
+        bool propertyHasMaintenance = false;
+
+        cout << GREEN << "Property: " << services[i].propertyName << RESET << "\n";
+        for (int j = 0; j < 2; j++) { // Iterate through units
+            bool unitHasMaintenance = false;
+
+            string maintenanceDates = "";
+            for (int d = 0; d < 31; d++) { // Check days in a month
+                if (services[i].units[j].maintenanceDates[d]) {
+                    maintenanceDates += to_string(d + 1) + " ";
+                    unitHasMaintenance = true;
+                    anyMaintenance = true;
+                }
+            }
+
+            if (unitHasMaintenance) {
+                cout << YELLOW << "  Unit: " << services[i].units[j].unitName << RESET << "\n";
+                cout << "    Maintenance Days: " << maintenanceDates << "\n";
+                propertyHasMaintenance = true;
+            }
+        }
+
+        if (!propertyHasMaintenance) {
+            cout << RED << "  No maintenance scheduled for this property.\n" << RESET;
+        }
+        cout << "\n";
+    }
+
+    if (!anyMaintenance) {
+        cout << RED << "No maintenance scheduled for any property.\n" << RESET;
+    }
+
+    cout << GREEN << "\nPress any key to return to menu...\n" << RESET;
+    return;
 }
 void exitApplication() {
     system("cls");
