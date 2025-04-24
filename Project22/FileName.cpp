@@ -973,6 +973,19 @@ void bookAppointment(Service services[], Rental rentals[], Booking bookings[], i
     cout << CYAN << "*******************************************************************************\n" << RESET;
     // Display Calendar
     displayCalendar(rentals, services, serviceChoice, unitChoice);
+    cout << RED << "\nMaintenance Notice:\n" << RESET;
+    bool hasMaintenance = false;
+
+    for (int i = 0; i < 31; ++i) {
+        if (services[serviceChoice].units[unitChoice].maintenanceDates[i]) {
+            cout << RED << "Day " << i + 1 << ": " << services[serviceChoice].units[unitChoice].maintenanceReason << RESET << "\n";
+            hasMaintenance = true;
+        }
+    }
+    if (!hasMaintenance) {
+        cout << GREEN << "No scheduled maintenance for this unit.\n" << RESET;
+        cout << "";
+    }
 
     int checkInDay, checkoutDate;
     while (true) {
@@ -1708,7 +1721,7 @@ void maintenanceMenu(Service services[], Rental rentals[], Booking bookings[], i
         while (true) {
             cout << "Enter your choice (1 to 4): ";
             cin >> adminChoice;
-            if (!cin.fail() && adminChoice >= 1 && adminChoice <= 3) {
+            if (!cin.fail() && adminChoice >= 1 && adminChoice <= 4) {
                 break;
             }
 
@@ -1737,7 +1750,7 @@ void maintenanceMenu(Service services[], Rental rentals[], Booking bookings[], i
             adminMenu(services, rentals, bookings, bookingCount, rentalsindex, serviceChoice);
             break;
         }
-    } while (adminChoice < 1 || adminChoice > 3);
+    } while (adminChoice < 1 || adminChoice > 4);
 }
 void summaryMaintenance(Service services[]) {
     system("cls");
